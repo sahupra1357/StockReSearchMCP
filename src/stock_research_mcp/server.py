@@ -10,6 +10,7 @@ from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 
 from .agents import MultiAgentOrchestrator
+from .agents.streaming_builder import get_streaming_builder
 
 
 # Configure logging
@@ -30,6 +31,9 @@ class StockResearchMCPServer:
     def __init__(self):
         self.server = Server("stock-research-mcp-server")
         self.orchestrator = MultiAgentOrchestrator()
+        self.builder = get_streaming_builder()
+        self.chroma_checked = False
+        self.chroma_building = False
         self._setup_handlers()
     
     def _setup_handlers(self):
@@ -93,6 +97,34 @@ Example sectors: technology, healthcare, finance, energy, retail, automotive""",
         
         logger.info(f"Processing sector analysis request for: {sector}")
         
+        output_parts = []
+        
+        # Check if ChromaDB needs to be built on first request
+        if not self.chroma_checked:
+            self.chroma_checked = True
+            
+            if not self.builder.is_chroma_db_built():
+                logger.info("ChromaDB not found. Building on first request...")
+                self.chroma_building = True
+                
+                # Stream build progress
+                build_output = []
+                build_output.append("\n" + "=" * 80)
+                build_output.append("📦 FIRST-TIME SETUP: BUILDING CHROMADB INDEX")
+                build_output.append("=" * 80)
+                build_output.append("\nℹ️  This is a one-time setup that runs on your first query.")
+                build_output.append("The database will be stored permanently for future use.\n")
+                
+                async for progress_msg in self.builder.build_with_streaming():
+                    build_output.append(progress_msg)
+                
+                build_output.append("\n" + "=" * 80 + "\n")
+                output_parts.append("".join(build_output))
+                
+                self.chroma_building = False
+            else:
+                logger.info("ChromaDB already exists, proceeding with query")
+        
         # Execute multi-agent analysis
         result = await self.orchestrator.process_sector_query(sector)
         
@@ -102,8 +134,9 @@ Example sectors: technology, healthcare, finance, energy, retail, automotive""",
         
         # Format the results
         formatted_output = self.orchestrator.format_results(result)
+        output_parts.append(formatted_output)
         
-        return [TextContent(type="text", text=formatted_output)]
+        return [TextContent(type="text", text="\n".join(output_parts))]
     
     async def run(self):
         """Run the MCP server."""

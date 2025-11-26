@@ -20,6 +20,12 @@ except ImportError:
 
 from ..types import Stock
 
+try:
+    from .sector_ticker_fetcher import get_sector_ticker_fetcher
+    HAS_SECTOR_FETCHER = True
+except ImportError:
+    HAS_SECTOR_FETCHER = False
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +47,15 @@ class RealAPIStockFetcher:
         self.polygon_key = os.getenv("POLYGON_API_KEY")
         self.fmp_key = os.getenv("FMP_API_KEY")
         self.nasdaq_key = os.getenv("NASDAQ_DATA_LINK_KEY")
+        
+        # Initialize sector ticker fetcher (will use ChromaDB if available)
+        self.use_chroma = os.getenv("USE_CHROMA_SECTORS", "true").lower() == "true"
+        if HAS_SECTOR_FETCHER:
+            self.sector_fetcher = get_sector_ticker_fetcher(use_chroma=self.use_chroma)
+            logger.info(f"Initialized with ChromaDB sector search: {self.use_chroma}")
+        else:
+            self.sector_fetcher = None
+            logger.warning("Sector ticker fetcher not available, using fallback")
     
     # ============================================================
     # METHOD 1: Yahoo Finance (Recommended - Free, No API Key)
@@ -309,40 +324,48 @@ class RealAPIStockFetcher:
         """
         Get a list of representative tickers for a sector.
         
-        In production, you could:
-        1. Maintain a database of sector classifications
-        2. Use sector ETFs as a reference
-        3. Query APIs that provide sector screening
-        4. Scrape from financial websites
-        """
-        sector_map = {
-            "technology": [
-                "AAPL", "MSFT", "GOOGL", "NVDA", "META", 
-                "AMD", "INTC", "CRM", "ORCL", "ADBE"
-            ],
-            "healthcare": [
-                "JNJ", "UNH", "PFE", "ABBV", "LLY", 
-                "TMO", "MRK", "ABT"
-            ],
-            "finance": [
-                "JPM", "BAC", "V", "MA", "WFC", 
-                "GS", "MS", "C", "AXP", "BLK"
-            ],
-            "energy": [
-                "XOM", "CVX", "COP", "SLB", "EOG",
-                "MPC", "PSX", "VLO"
-            ],
-            "consumer": [
-                "AMZN", "WMT", "HD", "MCD", "NKE",
-                "SBUX", "TGT", "COST"
-            ],
-            "industrial": [
-                "BA", "CAT", "GE", "MMM", "HON",
-                "UNP", "UPS", "LMT"
-            ]
-        }
+        Now uses ChromaDB semantic search if available, which queries
+        SEC filings to find companies that match the sector description.
         
-        return sector_map.get(sector.lower(), [])
+        Falls back to hardcoded mappings if ChromaDB is not available.
+        """
+        if self.sector_fetcher:
+            # Use ChromaDB semantic search or fallback
+            return self.sector_fetcher.get_tickers_for_sector(
+                sector=sector,
+                limit=15,  # Get top 15 most relevant companies
+                min_relevance=0.4  # Similarity threshold
+            )
+        else:
+            # Legacy hardcoded fallback
+            sector_map = {
+                "technology": [
+                    "AAPL", "MSFT", "GOOGL", "NVDA", "META", 
+                    "AMD", "INTC", "CRM", "ORCL", "ADBE"
+                ],
+                "healthcare": [
+                    "JNJ", "UNH", "PFE", "ABBV", "LLY", 
+                    "TMO", "MRK", "ABT"
+                ],
+                "finance": [
+                    "JPM", "BAC", "V", "MA", "WFC", 
+                    "GS", "MS", "C", "AXP", "BLK"
+                ],
+                "energy": [
+                    "XOM", "CVX", "COP", "SLB", "EOG",
+                    "MPC", "PSX", "VLO"
+                ],
+                "consumer": [
+                    "AMZN", "WMT", "HD", "MCD", "NKE",
+                    "SBUX", "TGT", "COST"
+                ],
+                "industrial": [
+                    "BA", "CAT", "GE", "MMM", "HON",
+                    "UNP", "UPS", "LMT"
+                ]
+            }
+            
+            return sector_map.get(sector.lower(), [])
 
 
 # ============================================================

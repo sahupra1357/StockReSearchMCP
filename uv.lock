@@ -181,18 +181,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bs4"
-version = "0.0.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "beautifulsoup4" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/aa/4acaf814ff901145da37332e05bb510452ebed97bc9602695059dd46ef39/bs4-0.0.2.tar.gz", hash = "sha256:a48685c58f50fe127722417bae83fe6badf500d54b55f7e39ffe43b798653925", size = 698, upload-time = "2024-01-17T18:15:47.371Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/bb/bf7aab772a159614954d84aa832c129624ba6c32faa559dfb200a534e50b/bs4-0.0.2-py2.py3-none-any.whl", hash = "sha256:abf8742c0805ef7f662dce4b51cca104cffe52b835238afc169142ab9b3fbccc", size = 1189, upload-time = "2024-01-17T18:15:48.613Z" },
-]
-
-[[package]]
 name = "build"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -587,18 +575,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/36/f4/c6e662dade71f56cd2f3735141b265c3c79293c109549c1e6933b0651ffc/exceptiongroup-1.3.0-py3-none-any.whl", hash = "sha256:4d111e6e0c13d0644cad6ddaa7ed0261a0b36971f6d23e7ec9b4b9097da78a10", size = 16674, upload-time = "2025-05-10T17:42:49.33Z" },
-]
-
-[[package]]
-name = "faker"
-version = "38.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "tzdata" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/64/27/022d4dbd4c20567b4c294f79a133cc2f05240ea61e0d515ead18c995c249/faker-38.2.0.tar.gz", hash = "sha256:20672803db9c7cb97f9b56c18c54b915b6f1d8991f63d1d673642dc43f5ce7ab", size = 1941469, upload-time = "2025-11-19T16:37:31.892Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/93/00c94d45f55c336434a15f98d906387e87ce28f9918e4444829a8fda432d/faker-38.2.0-py3-none-any.whl", hash = "sha256:35fe4a0a79dee0dc4103a6083ee9224941e7d3594811a50e3969e547b0d2ee65", size = 1980505, upload-time = "2025-11-19T16:37:30.208Z" },
 ]
 
 [[package]]
@@ -2351,6 +2327,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pyrate-limiter"
+version = "3.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/da/f682c5c5f9f0a5414363eb4397e6b07d84a02cde69c4ceadcbf32c85537c/pyrate_limiter-3.9.0.tar.gz", hash = "sha256:6b882e2c77cda07a241d3730975daea4258344b39c878f1dd8849df73f70b0ce", size = 289308, upload-time = "2025-07-30T14:36:58.659Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/04/af/d8bf0959ece9bc4679bd203908c31019556a421d76d8143b0c6871c7f614/pyrate_limiter-3.9.0-py3-none-any.whl", hash = "sha256:77357840c8cf97a36d67005d4e090787043f54000c12c2b414ff65657653e378", size = 33628, upload-time = "2025-07-30T14:36:57.71Z" },
+]
+
+[[package]]
 name = "pyreadline3"
 version = "3.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2702,17 +2687,15 @@ wheels = [
 
 [[package]]
 name = "sec-edgar-downloader"
-version = "4.0.3"
+version = "5.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "bs4" },
-    { name = "faker" },
-    { name = "lxml" },
+    { name = "pyrate-limiter" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/35/c3/422b64338d09f2d4234588c1b75903012639dc87c42fb1ebb9120d099343/sec-edgar-downloader-4.0.3.tar.gz", hash = "sha256:2fe57aab6d18775bd0820d34aad3d597f9ce4c8ed5568a38ae9f6d9c3887c32f", size = 27631, upload-time = "2021-04-06T19:34:14.405Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/3d/5c033a95a0b88cf0f664b2080553c7a3a412e4ee100e2167423bdc9862a6/sec_edgar_downloader-5.0.3.tar.gz", hash = "sha256:a67f298c66c8c63773c6aad69d1b99e6fedca5d8fd3b9c1a6e99218dd73e0d26", size = 33401, upload-time = "2025-02-14T06:24:48.58Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/21/b5e8b72f12af0b918615ed1021cf55a1c46813d0bea044ff51412f46b5c5/sec_edgar_downloader-4.0.3-py3-none-any.whl", hash = "sha256:f0b6b82fa1dc39a0edcdfcef5d2b03563f07169cdcb14dedd9a4796fcd1c808d", size = 12728, upload-time = "2021-04-06T19:34:13.19Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/64/7e975d69affe7d308126b24b0aa52483bb3dbcaff14a9964a00c05e8f9a5/sec_edgar_downloader-5.0.3-py3-none-any.whl", hash = "sha256:c7e101c84ac10da1fd113aab2d31d81b850c49a27e2bb37cb86a7ead808b4bfc", size = 14915, upload-time = "2025-02-14T06:24:47.136Z" },
 ]
 
 [[package]]
@@ -2822,7 +2805,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "requests", specifier = ">=2.31.0" },
-    { name = "sec-edgar-downloader", specifier = "==4.0.3" },
+    { name = "sec-edgar-downloader", specifier = ">=5.0.3" },
     { name = "tabulate", specifier = ">=0.9.0" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "uvicorn", specifier = "==0.38.0" },

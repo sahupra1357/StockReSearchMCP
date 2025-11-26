@@ -1,8 +1,11 @@
 # fetch_tickers.py
 import httpx
 import json
+import os
 
-SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
+
+SEC_TICKERS_URL = os.getenv("SEC_TICKERS_URL", "https://www.sec.gov/files/company_tickers.json")
+TICKERS_FILE = os.getenv("TICKERS_FILE", "tickers.json")
 
 def fetch_sec_tickers():
     # SEC.gov requires a User-Agent header
@@ -28,6 +31,6 @@ if __name__ == "__main__":
     tickers = fetch_sec_tickers()
     print(f"Found {len(tickers)} entries")
     # save to file
-    with open("tickers.json", "w", encoding="utf-8") as f:
+    with open(TICKERS_FILE, "w", encoding="utf-8") as f:
         json.dump(tickers, f, indent=2)
-    print("Saved tickers.json")
+    print(f"Saved {TICKERS_FILE}")

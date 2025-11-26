@@ -53,6 +53,59 @@ source venv/bin/activate
 pip install -e .
 ```
 
+## 🗄️ ChromaDB Setup - Automatic on First Use!
+
+**✨ NEW**: ChromaDB builds automatically on your first query - no manual setup required!
+
+### How It Works
+
+1. **First Query**: When you make your first stock analysis request, the system automatically:
+   - Detects that ChromaDB doesn't exist
+   - Fetches company data from SEC
+   - Downloads and processes filings
+   - Builds embeddings and stores in ChromaDB
+   - Shows you real-time progress updates
+   - Then proceeds with your query
+
+2. **Subsequent Queries**: ChromaDB is stored permanently, so all future queries are instant!
+
+### Required Environment Variables
+
+Set these in your MCP configuration (see Configuration section below):
+
+```bash
+# Required: OpenAI API key for embeddings
+OPENAI_API_KEY="your-openai-api-key"
+
+# Required: SEC-compliant User-Agent
+SEC_API_USER_AGENT="Your Company Name contact@youremail.com"
+
+# Optional: Customize ChromaDB storage location (default: ./chroma_db)
+CHROMA_PERSIST_DIR="./chroma_db"
+
+# Optional: Adjust processing (lower = faster but fewer companies)
+MAX_WORKERS="4"        # Parallel downloads (default: 4)
+BATCH_SIZE="32"        # Embedding batch size (default: 32)
+```
+
+### Manual Build (Optional)
+
+If you prefer to build ChromaDB before your first query:
+
+```bash
+cd /Users/pradeepsahu/dev_data/StockSearhMCP
+source venv/bin/activate
+
+# Set environment variables
+export OPENAI_API_KEY="your-key"
+export SEC_API_USER_AGENT="YourCompany contact@example.com"
+
+# Run builder
+python src/sector/builder.py
+```
+
+**Note**: First-time build takes 20-40 minutes. You'll see progress updates during the build.
+
 ## ⚙️ Configuration
 
 Add to your MCP settings file to connect with Claude Desktop or other MCP clients.
@@ -71,7 +124,14 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
         "stock_research_mcp.server"
       ],
       "env": {
-        "PYTHONPATH": "/Users/pradeepsahu/dev_data/StockSearhMCP/src"
+        "PYTHONPATH": "/Users/pradeepsahu/dev_data/StockSearhMCP/src",
+        "OPENAI_API_KEY": "your-openai-api-key-here",
+        "SEC_API_USER_AGENT": "YourCompany contact@youremail.com",
+        "CHROMA_PERSIST_DIR": "/Users/pradeepsahu/dev_data/StockSearhMCP/chroma_db",
+        "USE_REAL_API": "true",
+        "USE_CHROMA_SECTORS": "true",
+        "MAX_WORKERS": "4",
+        "BATCH_SIZE": "32"
       }
     }
   }
@@ -106,7 +166,14 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
         "stock_research_mcp.server"
       ],
       "env": {
-        "PYTHONPATH": "C:\\Users\\YourUsername\\dev_data\\StockSearhMCP\\src"
+        "PYTHONPATH": "C:\\Users\\YourUsername\\dev_data\\StockSearhMCP\\src",
+        "OPENAI_API_KEY": "your-openai-api-key-here",
+        "SEC_API_USER_AGENT": "YourCompany contact@youremail.com",
+        "CHROMA_PERSIST_DIR": "C:\\Users\\YourUsername\\dev_data\\StockSearhMCP\\chroma_db",
+        "USE_REAL_API": "true",
+        "USE_CHROMA_SECTORS": "true",
+        "MAX_WORKERS": "4",
+        "BATCH_SIZE": "32"
       }
     }
   }
@@ -117,13 +184,50 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
 
 Once configured, you can use the server through MCP-compatible clients like Claude Desktop.
 
+### How It Works (Complete Flow)
+
+**🎬 First Query** (one-time setup):
+
+1. **User Query** → You ask Claude: "Analyze stocks in the biotechnology sector"
+
+2. **Automatic ChromaDB Build** → System detects no database and builds it:
+   - Shows real-time progress: "📥 Fetching company tickers... ✅ Found 8,000 companies"
+   - Downloads SEC filings with updates: "📊 Progress: 100/8000 processed"
+   - Creates embeddings and stores in ChromaDB
+   - Takes 20-40 minutes with streaming progress updates
+   - Database persists permanently on disk
+
+3. **Query Execution** → After build completes:
+   - Semantic search finds biotechnology companies
+   - Multi-agent analysis runs
+   - Results displayed
+
+**⚡ Subsequent Queries** (instant):
+
+1. **User Query** → You ask: "Show me semiconductor stocks"
+
+2. **ChromaDB Semantic Search** → Instant lookup from persistent database:
+   - Converts "semiconductor" to embedding
+   - Finds matching companies in SEC filings
+   - Returns tickers (NVDA, AMD, INTC, etc.)
+
+3. **Multi-Agent Processing**:
+   - **Search Agent**: Uses ChromaDB + real-time APIs
+   - **Categorization Agent**: Groups by price
+   - **Analysis Agent**: News, events, recommendations
+
+4. **Result Display** → Comprehensive report in seconds
+
 ### Example Queries
 
 Ask Claude:
 - "Analyze stocks in the technology sector"
-- "Show me healthcare stocks and their analysis"
-- "What are the best energy stocks right now?"
-- "Give me a breakdown of finance sector stocks"
+- "Show me biotechnology companies and their analysis"
+- "What are the best renewable energy stocks right now?"
+- "Give me a breakdown of artificial intelligence sector stocks"
+- "Find companies in the semiconductor industry"
+
+**Note**: The ChromaDB enables natural language sector queries! You can ask about specific industries, and the semantic search will find relevant companies based on their actual business descriptions from SEC filings.
 
 ### Available Tools
 
@@ -149,37 +253,55 @@ Performs comprehensive multi-agent analysis on a sector.
 
 ## 🏗️ Architecture
 
-### Multi-Agent Design
+### Multi-Agent Design with ChromaDB Integration
 
 ```
-User Query
+User Query: "Analyze biotechnology sector"
     ↓
 Orchestrator
     ↓
-    ├─→ StockSearchAgent (searches for stocks)
+    ├─→ StockSearchAgent
+    │    ├─→ Query ChromaDB (semantic search on SEC filings)
+    │    │   Returns: [MRNA, GILD, BIIB, VRTX, ...]
+    │    └─→ Fetch real-time data from Yahoo Finance API
     ↓
-    ├─→ StockCategorizationAgent (groups by price)
+    ├─→ StockCategorizationAgent
+    │    └─→ Group by price (High: >$100, Medium: $10-$100, Low: <$10)
     ↓
-    └─→ StockAnalysisAgent (analyzes each stock)
-         ├─→ Price Analysis
-         ├─→ News Sentiment
-         ├─→ Event Calendar
-         └─→ Recommendation
+    └─→ StockAnalysisAgent (for each stock)
+         ├─→ Price Analysis (trend, momentum)
+         ├─→ News Sentiment (from APIs)
+         ├─→ Event Calendar (earnings, dividends)
+         └─→ Investment Recommendation
+    ↓
+Final Report to User
 ```
+
+**Key Innovation**: The system uses **semantic search** on SEC filing data stored in ChromaDB, allowing it to understand natural language sector queries and find relevant companies dynamically, rather than relying on hardcoded mappings.
 
 ### Project Structure
 
 ```
-src/stock_research_mcp/
-├── __init__.py              # Package initialization
-├── server.py                # MCP server entry point
-├── types.py                 # Data models (Pydantic)
-└── agents/
-    ├── __init__.py
-    ├── stock_search_agent.py           # Agent 1: Search
-    ├── stock_categorization_agent.py   # Agent 2: Categorize
-    ├── stock_analysis_agent.py         # Agent 3: Analyze
-    └── orchestrator.py                 # Coordinates all agents
+src/
+├── stock_research_mcp/
+│   ├── __init__.py              # Package initialization
+│   ├── server.py                # MCP server entry point
+│   ├── types.py                 # Data models (Pydantic)
+│   └── agents/
+│       ├── __init__.py
+│       ├── stock_search_agent.py           # Agent 1: Search (uses ChromaDB)
+│       ├── stock_categorization_agent.py   # Agent 2: Categorize
+│       ├── stock_analysis_agent.py         # Agent 3: Analyze
+│       ├── orchestrator.py                 # Coordinates all agents
+│       ├── real_api_fetcher.py            # Real API integrations
+│       └── sector_ticker_fetcher.py       # ChromaDB query helper
+└── sector/
+    ├── fetch_tickers.py         # Fetch company tickers from SEC
+    ├── fetch_filings.py         # Download SEC filings
+    ├── extract_text.py          # Extract business sections
+    ├── embeddings_and_chroma.py # OpenAI embeddings + ChromaDB
+    ├── builder.py               # Build ChromaDB index (run first!)
+    └── search_api.py            # Optional: FastAPI search interface
 ```
 
 ## 🔧 Development
@@ -338,44 +460,84 @@ HIGH-VALUE STOCKS (Price > $100)
 
 ## 🛠️ Troubleshooting
 
+### ChromaDB not found / No stocks returned
+
+**Problem**: System falls back to hardcoded sector mappings or returns empty results.
+
+**Solution**:
+1. Verify ChromaDB was built: `ls -la chroma_db/`
+2. Check environment variable: `echo $CHROMA_PERSIST_DIR`
+3. Rebuild index: `python src/sector/builder.py`
+4. Set `CHROMA_PERSIST_DIR` in MCP config to absolute path
+
 ### Server won't start
 
 - Ensure virtual environment is activated
 - Check Python version: `python --version` (should be 3.10+)
 - Reinstall dependencies: `pip install -e .`
+- Verify `OPENAI_API_KEY` is set
 
 ### Import errors
 
 - Verify PYTHONPATH in your MCP config
 - Make sure you're in the correct directory
 - Check that all agent files exist
+- Ensure ChromaDB directory is accessible
 
-### No stocks found
+### Builder script fails
 
-- Verify the sector name is correct
-- Currently supported: technology, healthcare, finance, energy
-- Check logs for error messages
+**SEC 403 Error**:
+- Set `SEC_API_USER_AGENT` with your contact email
+- Example: `"YourCompany contact@example.com"`
+
+**OpenAI API Error**:
+- Verify `OPENAI_API_KEY` is valid
+- Check API quota/billing at platform.openai.com
+
+**Download timeouts**:
+- Reduce `MAX_WORKERS` (try 4 instead of 8)
+- Check internet connection
 
 ### MCP connection issues
 
 - Restart Claude Desktop after config changes
 - Check the config file path is correct
 - Verify JSON syntax in config file
+- Check Claude Desktop logs for errors
 
-## 🔍 Adding New Sectors
+## 🔄 Updating the ChromaDB Index
 
-To add more sectors with mock data:
+### When to Rebuild
 
+Rebuild the ChromaDB index when:
+- New companies file with SEC
+- You want to refresh with latest 10-K/10-Q filings
+- The index becomes corrupted
+- You want to expand to more companies
+
+### How to Update
+
+```bash
+# Option 1: Full rebuild (deletes old data)
+rm -rf chroma_db/
+python src/sector/builder.py
+
+# Option 2: Incremental update (builder will add/update)
+python src/sector/builder.py
+```
+
+### Customizing the Index
+
+**Include more/fewer companies**:
+Edit `src/sector/fetch_tickers.py` to filter by market cap, exchange, etc.
+
+**Add specific tickers**:
+Create a custom ticker list JSON file and modify `builder.py`
+
+**Change filing types**:
+Edit `candidates` list in `src/sector/fetch_filings.py`:
 ```python
-# In stock_search_agent.py, update _initialize_mock_data()
-def _initialize_mock_data(self) -> dict:
-    return {
-        "technology": [...],
-        "retail": [  # New sector
-            Stock(symbol="AMZN", name="Amazon", price=145.50, ...),
-            Stock(symbol="WMT", name="Walmart", price=165.30, ...),
-        ]
-    }
+candidates = ["10-K", "20-F", "S-1", "10-Q"]  # Modify as needed
 ```
 
 ## 🤝 Contributing

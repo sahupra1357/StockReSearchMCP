@@ -2,7 +2,7 @@
 import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from embeddings_and_chroma import embed_texts, collection
+from .embeddings_and_chroma import embed_texts, collection
 
 app = FastAPI(title="SEC Category Search API")
 
