@@ -18,7 +18,7 @@ def search(req: QueryReq):
     results = collection.query(
         query_embeddings=[q_emb],
         n_results=req.k,
-        include=["ids", "distances", "documents", "metadatas"]
+        include=["distances", "documents", "metadatas"]
     )
     return results
 

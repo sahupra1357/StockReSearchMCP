@@ -2,6 +2,8 @@
 import os
 import sys
 import json
+import time
+from datetime import timedelta
 # import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -89,6 +91,9 @@ def process_one(entry):
         return None
 
 def main():
+    # Start timing
+    start_time = time.time()
+    
     # Check required environment variables
     if not os.getenv("OPENAI_API_KEY"):
         logger.error("❌ Error: OPENAI_API_KEY environment variable is required")
@@ -99,12 +104,14 @@ def main():
     logger.info(f"📁 ChromaDB will be stored at: {os.getenv('CHROMA_PERSIST_DIR', './chroma_db')}")
     
     tickers = load_or_fetch_tickers()
-    tickers = tickers[:10]  # Limit for testing
+    tickers = tickers[:100]  # Limit for testing
     max_workers = int(os.getenv("MAX_WORKERS", "8"))
     batch_size = int(os.getenv("BATCH_SIZE", "64"))
     
     logger.info(f"📊 Processing {len(tickers)} companies with {max_workers} workers")
     logger.info(f"💾 Batch size: {batch_size}")
+    
+    processing_start = time.time()
 
     to_index = []
     successful = 0
@@ -125,15 +132,26 @@ def main():
             
             # Progress update every 50 companies
             if i % 50 == 0:
-                logger.info(f"📊 Progress: {i}/{total} processed, {successful} successful ({(successful/i)*100:.1f}%)")
+                elapsed = time.time() - processing_start
+                avg_time = elapsed / i
+                eta_seconds = avg_time * (total - i)
+                eta = str(timedelta(seconds=int(eta_seconds)))
+                logger.info(f"📊 Progress: {i}/{total} processed, {successful} successful ({(successful/i)*100:.1f}%) | ETA: {eta}")
+    
+    processing_time = time.time() - processing_start
     
     if to_index:
         logger.info(f"💾 Indexing final batch of {len(to_index)} companies...")
         build_batch_records(to_index)
     
+    total_time = time.time() - start_time
+    
     logger.info("=" * 80)
     logger.info(f"✅ Build complete!")
     logger.info(f"📊 Successfully indexed {successful}/{total} companies ({(successful/total)*100:.1f}%)")
+    logger.info(f"⏱️  Processing time: {str(timedelta(seconds=int(processing_time)))}")
+    logger.info(f"⏱️  Total time: {str(timedelta(seconds=int(total_time)))}")
+    logger.info(f"📈 Average time per company: {processing_time/total:.2f}s")
     logger.info(f"💾 Database location: {os.getenv('CHROMA_PERSIST_DIR', './chroma_db')}")
     logger.info("=" * 80)
 

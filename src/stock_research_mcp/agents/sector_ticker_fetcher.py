@@ -12,7 +12,7 @@ if os.path.exists(sector_path) and sector_path not in sys.path:
 
 try:
     # Import ChromaDB components - will use PersistentClient from embeddings_and_chroma
-    from embeddings_and_chroma import embed_texts, collection, CHROMA_PERSIST_DIR
+    from sector.embeddings_and_chroma import embed_texts, collection, CHROMA_PERSIST_DIR
     HAS_CHROMA = True
     logging.info(f"ChromaDB loaded from: {CHROMA_PERSIST_DIR}")
 except ImportError as e:
@@ -88,7 +88,7 @@ class SectorTickerFetcher:
             results = collection.query(
                 query_embeddings=[query_embedding],
                 n_results=limit * 2,  # Get more results for filtering
-                include=["ids", "distances", "metadatas"]
+                include=["distances", "metadatas"]
             )
             
             if not results or not results.get("ids") or not results["ids"][0]:
@@ -222,7 +222,7 @@ class SectorTickerFetcher:
             results = collection.query(
                 query_embeddings=[query_embedding],
                 n_results=limit,
-                include=["ids", "distances", "metadatas", "documents"]
+                include=["distances", "metadatas", "documents"]
             )
             
             if not results or not results.get("ids"):

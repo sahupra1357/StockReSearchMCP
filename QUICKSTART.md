@@ -40,13 +40,17 @@ Add this configuration:
 {
   "mcpServers": {
     "stock-research": {
-      "command": "python",
+      "command": "/Users/pradeepsahu/dev_data/StockSearhMCP/venv/bin/python",
       "args": [
         "-m",
         "stock_research_mcp.server"
       ],
       "env": {
-        "PYTHONPATH": "/Users/pradeepsahu/dev_data/StockSearhMCP/src"
+        "PYTHONPATH": "/Users/pradeepsahu/dev_data/StockSearhMCP/src",
+        "OPENAI_API_KEY": "your-openai-api-key-here",
+        "CHROMA_PERSIST_DIR": "/Users/pradeepsahu/dev_data/StockSearhMCP/output/chroma_db",
+        "USE_REAL_API": "true",
+        "USE_CHROMA_SECTORS": "true"
       }
     }
   }
@@ -76,6 +80,58 @@ You should see:
 
 ## Troubleshooting
 
+### Claude Desktop Can't Connect to Server
+
+**1. Verify the config file path is correct:**
+```bash
+# Check if file exists
+cat ~/Library/Application\ Support/Claude/claude_desktop_config.json
+
+# If it doesn't exist, create the directory
+mkdir -p ~/Library/Application\ Support/Claude
+```
+
+**2. Use absolute path to Python in venv:**
+```json
+"command": "/Users/pradeepsahu/dev_data/StockSearhMCP/venv/bin/python"
+```
+NOT just `"python"` - Claude needs the full path!
+
+**3. Check Python path is correct:**
+```bash
+# Get your venv python path
+which python
+# Should output: /Users/pradeepsahu/dev_data/StockSearhMCP/venv/bin/python
+```
+
+**4. Test the server manually:**
+```bash
+cd /Users/pradeepsahu/dev_data/StockSearhMCP
+source venv/bin/activate
+python -m stock_research_mcp.server
+# Press Ctrl+C to stop if it starts without errors
+```
+
+**5. Check MCP is installed:**
+```bash
+pip list | grep mcp
+# Should show: mcp
+```
+
+**6. View Claude Desktop logs:**
+```bash
+# macOS
+tail -f ~/Library/Logs/Claude/mcp*.log
+
+# Look for errors related to stock-research
+```
+
+**7. Completely restart Claude:**
+- Quit Claude Desktop (Cmd+Q, not just close window)
+- Wait 5 seconds
+- Reopen Claude Desktop
+- Check bottom-left for 🔌 MCP connection indicator
+
 ### "Module not found" error
 ```bash
 # Make sure you're in the virtual environment
@@ -86,15 +142,29 @@ pip install -e .
 ```
 
 ### "Can't find the tool" in Claude
-- Double-check the config file path
-- Verify JSON syntax (use a JSON validator)
-- Restart Claude Desktop completely
+- Double-check the config file path: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Verify JSON syntax (use https://jsonlint.com)
+- Use **absolute paths** for `command` and `PYTHONPATH`
+- Restart Claude Desktop **completely** (Cmd+Q)
 - Check that the PYTHONPATH matches your installation
 
-### Want to see logs?
+### Still not working?
+
+**Run diagnostics:**
 ```bash
-# Run the server directly to see output
-python -m stock_research_mcp.server
+# Test if server starts
+cd /Users/pradeepsahu/dev_data/StockSearhMCP
+./venv/bin/python -m stock_research_mcp.server
+
+# Should show: "Stock Research MCP Server starting..."
+# Press Ctrl+D to send EOF and exit
+
+# Check if ChromaDB exists
+ls -la output/chroma_db/
+# Should show .sqlite3 and .parquet files
+
+# Test ChromaDB query
+python src/sector/query_chroma.py count
 ```
 
 ## Next Steps

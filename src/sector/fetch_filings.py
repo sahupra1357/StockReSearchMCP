@@ -43,15 +43,27 @@ def download_best_filing(ticker_or_cik: str, out_dir: str = "./output/sec_filing
     
     for form in candidates:
         try:
-            logger.debug(f"Attempting {form} for {ticker_or_cik}")
-            dl.get(form, ticker_or_cik)
-            
             # sec-edgar-downloader saves files under out_dir/sec-edgar-filings/{ticker_or_cik}/{form}/
             # Try both possible paths
             possible_folders = [
                 os.path.join(out_dir, "sec-edgar-filings", ticker_or_cik, form),
                 os.path.join(out_dir, ticker_or_cik, form)
             ]
+            
+            # Check if already downloaded
+            already_downloaded = False
+            for folder in possible_folders:
+                if os.path.isdir(folder) and os.listdir(folder):
+                    already_downloaded = True
+                    logger.debug(f"✅ {form} for {ticker_or_cik} already downloaded at {folder}")
+                    break
+            
+            # Only download if not already present
+            if not already_downloaded:
+                logger.info(f"📥 Downloading {form} for {ticker_or_cik}...")
+                dl.get(form, ticker_or_cik)
+            else:
+                logger.info(f"⏭️  Skipping download for {form} {ticker_or_cik} (already exists)")
             
             for folder in possible_folders:
                 if not os.path.isdir(folder):

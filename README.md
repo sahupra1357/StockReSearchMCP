@@ -40,14 +40,14 @@ When you query a sector, the system automatically:
 # Clone or navigate to the project directory
 cd /Users/pradeepsahu/dev_data/StockSearhMCP
 
-# Create a virtual environment
-python -m venv venv
+# Create a virtual environment (using .venv as the directory name)
+python -m venv .venv
 
 # Activate the virtual environment
 # On macOS/Linux:
-source venv/bin/activate
+source .venv/bin/activate
 # On Windows:
-# venv\Scripts\activate
+# .venv\Scripts\activate
 
 # Install the package in development mode
 pip install -e .
@@ -94,7 +94,7 @@ If you prefer to build ChromaDB before your first query:
 
 ```bash
 cd /Users/pradeepsahu/dev_data/StockSearhMCP
-source venv/bin/activate
+source .venv/bin/activate
 
 # Set environment variables
 export OPENAI_API_KEY="your-key"
@@ -118,7 +118,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "stock-research": {
-      "command": "python",
+      "command": "/Users/pradeepsahu/dev_data/StockSearhMCP/.venv/bin/python",
       "args": [
         "-m",
         "stock_research_mcp.server"
@@ -127,7 +127,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
         "PYTHONPATH": "/Users/pradeepsahu/dev_data/StockSearhMCP/src",
         "OPENAI_API_KEY": "your-openai-api-key-here",
         "SEC_API_USER_AGENT": "YourCompany contact@youremail.com",
-        "CHROMA_PERSIST_DIR": "/Users/pradeepsahu/dev_data/StockSearhMCP/chroma_db",
+        "CHROMA_PERSIST_DIR": "/Users/pradeepsahu/dev_data/StockSearhMCP/output/chroma_db",
         "USE_REAL_API": "true",
         "USE_CHROMA_SECTORS": "true",
         "MAX_WORKERS": "4",
@@ -146,7 +146,13 @@ After installation, you can also use:
 {
   "mcpServers": {
     "stock-research": {
-      "command": "/Users/pradeepsahu/dev_data/StockSearhMCP/venv/bin/stock-research-mcp"
+      "command": "/Users/pradeepsahu/dev_data/StockSearhMCP/.venv/bin/stock-research-mcp",
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key-here",
+        "CHROMA_PERSIST_DIR": "/Users/pradeepsahu/dev_data/StockSearhMCP/output/chroma_db",
+        "USE_REAL_API": "true",
+        "USE_CHROMA_SECTORS": "true"
+      }
     }
   }
 }
@@ -169,7 +175,7 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
         "PYTHONPATH": "C:\\Users\\YourUsername\\dev_data\\StockSearhMCP\\src",
         "OPENAI_API_KEY": "your-openai-api-key-here",
         "SEC_API_USER_AGENT": "YourCompany contact@youremail.com",
-        "CHROMA_PERSIST_DIR": "C:\\Users\\YourUsername\\dev_data\\StockSearhMCP\\chroma_db",
+        "CHROMA_PERSIST_DIR": "C:\\Users\\YourUsername\\dev_data\\StockSearhMCP\\output\\chroma_db",
         "USE_REAL_API": "true",
         "USE_CHROMA_SECTORS": "true",
         "MAX_WORKERS": "4",
@@ -183,6 +189,26 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
 ## 🎯 Usage
 
 Once configured, you can use the server through MCP-compatible clients like Claude Desktop.
+
+### 🤖 How Claude Decides to Use the Tool
+
+**Claude AI automatically decides** when to call the `analyze_sector` tool based on your query:
+
+**✅ Tool WILL be called:**
+- "Analyze technology stocks"
+- "Show me healthcare sector analysis"
+- "What are the best finance stocks?"
+- "Use analyze_sector for energy"
+- "Search for semiconductor companies"
+
+**❌ Tool might NOT be called:**
+- "Tell me about stocks" (too vague, Claude answers from knowledge)
+- "What's a good investment?" (general financial advice)
+- "Explain the stock market" (educational, not sector analysis)
+
+**💡 Pro Tip:** Be specific about sectors/industries to ensure the tool is used. You can also explicitly say "use the tool" or "analyze the sector."
+
+**Where it happens:** The tool call is handled by the MCP server in `src/stock_research_mcp/server.py` at the `@self.server.call_tool()` decorator, which routes to the multi-agent analysis pipeline.
 
 ### How It Works (Complete Flow)
 
@@ -229,6 +255,37 @@ Ask Claude:
 
 **Note**: The ChromaDB enables natural language sector queries! You can ask about specific industries, and the semantic search will find relevant companies based on their actual business descriptions from SEC filings.
 
+### 📋 Viewing MCP Server Logs
+
+**Log locations:**
+- Main server log: `~/Library/Logs/Claude/mcp-server-stock-research.log`
+- General MCP log: `~/Library/Logs/Claude/mcp.log`
+
+**Useful commands:**
+```bash
+# Follow live logs
+tail -f ~/Library/Logs/Claude/mcp-server-stock-research.log
+
+# View last 100 lines
+tail -100 ~/Library/Logs/Claude/mcp-server-stock-research.log
+
+# Search for specific stock
+grep "AAPL" ~/Library/Logs/Claude/mcp-server-stock-research.log
+
+# See only errors
+grep "ERROR" ~/Library/Logs/Claude/mcp-server-stock-research.log
+
+# View analysis reports
+grep -A 50 "STOCK ANALYSIS REPORT" ~/Library/Logs/Claude/mcp-server-stock-research.log
+```
+
+**What you'll see:**
+- Tool calls: `Processing sector analysis request for: technology`
+- Stock fetching: `Fetched AAPL: $276.97`
+- Agent workflow: `[StockSearchAgent]`, `[StockCategorizationAgent]`, `[StockAnalysisAgent]`
+- ChromaDB operations: `Found 15 stocks in technology sector`
+- Full analysis results sent to Claude
+
 ### Available Tools
 
 #### `analyze_sector`
@@ -239,10 +296,10 @@ Performs comprehensive multi-agent analysis on a sector.
 - `sector` (string, required): The sector to analyze
 
 **Supported Sectors:**
-- Technology
-- Healthcare
-- Finance
-- Energy
+- **Any sector or industry!** Thanks to ChromaDB semantic search on SEC filings
+- Examples: technology, healthcare, finance, energy, biotechnology, semiconductors, renewable energy, artificial intelligence, e-commerce, automotive, pharmaceuticals, real estate, aerospace, telecommunications, retail, etc.
+
+**How it works:** The system uses semantic search on company business descriptions from SEC filings, so you can query any industry using natural language - not limited to predefined categories!
 
 **Example:**
 ```json
@@ -465,10 +522,18 @@ HIGH-VALUE STOCKS (Price > $100)
 **Problem**: System falls back to hardcoded sector mappings or returns empty results.
 
 **Solution**:
-1. Verify ChromaDB was built: `ls -la chroma_db/`
+1. Verify ChromaDB was built: `ls -la output/chroma_db/`
 2. Check environment variable: `echo $CHROMA_PERSIST_DIR`
 3. Rebuild index: `python src/sector/builder.py`
-4. Set `CHROMA_PERSIST_DIR` in MCP config to absolute path
+4. Set `CHROMA_PERSIST_DIR` in MCP config to absolute path: `/Users/pradeepsahu/dev_data/StockSearhMCP/output/chroma_db`
+
+### ChromaDB query error: "Expected include item to be..."
+
+**Problem**: Error in logs: `Error querying ChromaDB: Expected include item to be one of documents, embeddings, metadatas, distances, uris, data, got ids in query.`
+
+**Status**: ✅ **FIXED** - This error has been resolved in the latest version. ChromaDB's `query()` method always returns `ids` by default, so `"ids"` should not be in the `include` parameter.
+
+**If you still see this error**: Make sure you have the latest code from `src/stock_research_mcp/agents/sector_ticker_fetcher.py`
 
 ### Server won't start
 
@@ -500,10 +565,30 @@ HIGH-VALUE STOCKS (Price > $100)
 
 ### MCP connection issues
 
-- Restart Claude Desktop after config changes
-- Check the config file path is correct
-- Verify JSON syntax in config file
-- Check Claude Desktop logs for errors
+**Problem**: Claude Desktop doesn't show the stock-research tool or can't connect to server.
+
+**Solution checklist:**
+1. ✅ **Config location**: Must be `~/Library/Application Support/Claude/claude_desktop_config.json` (user home, not system `/Library`)
+2. ✅ **Absolute python path**: Use `/Users/pradeepsahu/dev_data/StockSearhMCP/.venv/bin/python`, NOT just `"python"`
+3. ✅ **Valid API key**: Replace `"your-openai-api-key-here"` with actual OpenAI key
+4. ✅ **JSON syntax**: Validate at https://jsonlint.com (no trailing commas)
+5. ✅ **Full restart**: Quit Claude Desktop (Cmd+Q), wait 5 seconds, reopen
+6. ✅ **Check connection**: Look for 🔌 green plug icon in bottom-left corner of Claude Desktop
+7. ✅ **View logs**: `tail -f ~/Library/Logs/Claude/mcp*.log` to see connection errors
+
+**Test server manually:**
+```bash
+cd /Users/pradeepsahu/dev_data/StockSearhMCP
+source .venv/bin/activate
+python -m stock_research_mcp.server
+# Should show: "Stock Research MCP Server starting..."
+# Press Ctrl+D to exit
+```
+
+**Force tool usage in Claude:**
+- Bad: "Tell me about tech stocks" (Claude might answer from knowledge)
+- Good: "Analyze technology sector stocks" (Claude will use the tool)
+- Explicit: "Use the analyze_sector tool for healthcare"
 
 ## 🔄 Updating the ChromaDB Index
 
@@ -519,7 +604,7 @@ Rebuild the ChromaDB index when:
 
 ```bash
 # Option 1: Full rebuild (deletes old data)
-rm -rf chroma_db/
+rm -rf output/chroma_db/
 python src/sector/builder.py
 
 # Option 2: Incremental update (builder will add/update)
