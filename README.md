@@ -1,56 +1,114 @@
-# Stock Research MCP Server (Python)
+# Stock Research MCP Server
 
-A sophisticated multi-agent Model Context Protocol (MCP) server for comprehensive stock research and analysis, built with Python.
+A sophisticated **multi-agent Model Context Protocol (MCP) server** for comprehensive stock research and analysis. Query any sector or industry using natural language and get instant, detailed analysis backed by SEC filings and real-time market data.
+
+## ✨ Key Highlights
+
+- 🤖 **Multi-Agent Architecture**: Three specialized AI agents work together for comprehensive analysis
+- 🔍 **Semantic Search**: ChromaDB with 8,000+ company SEC filings enables natural language queries
+- 🚀 **Zero Configuration**: Automatic ChromaDB setup on first use with streaming progress
+- 🌐 **Dual Interface**: Use via Claude Desktop (MCP) or Gradio web interface
+- 📊 **Real-Time Data**: Integration with Yahoo Finance and OpenAI for current market insights
+- ⚡ **Fast & Efficient**: ~355ms latency for analysis queries after initial setup
+
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Installation & Quick Start](#-installation--quick-start)
+- [ChromaDB Setup](#️-chromadb-setup---automatic-on-first-use)
+- [Configuration](#️-configuration)
+- [Usage - Two Ways](#-usage---two-ways-to-access)
+  - [Gradio Web Interface](#1--gradio-web-interface-easiest)
+  - [Claude Desktop (MCP)](#2--claude-desktop-mcp-integration)
+- [Architecture](#️-architecture)
+- [Development](#-development)
+- [Extending with APIs](#-extending-with-real-data-sources)
+- [Troubleshooting](#️-troubleshooting)
+- [Updating ChromaDB](#-updating-the-chromadb-index)
+- [Contributing](#-contributing)
+- [License & Disclaimer](#-disclaimer)
 
 ## 🚀 Features
 
-This MCP server uses a **multi-agent architecture** to provide in-depth stock market analysis:
+### 🤖 Multi-Agent System
 
-### 🤖 Three Specialized Agents
+**Three Specialized Agents Working Together:**
 
-1. **Stock Search Agent** - Searches the web for stocks in any sector
-2. **Stock Categorization Agent** - Organizes stocks into price categories
-3. **Stock Analysis Agent** - Provides detailed analysis with news, events, and recommendations
+1. **Stock Search Agent** 
+   - Semantic search on SEC filings via ChromaDB
+   - Real-time data from Yahoo Finance API
+   - Finds companies using natural language queries
 
-### 📊 Analysis Pipeline
+2. **Stock Categorization Agent**
+   - Groups stocks by price ranges
+   - High: >$100, Medium: $10-$100, Low: <$10
+   - Smart categorization logic
 
-When you query a sector, the system automatically:
+3. **Stock Analysis Agent**
+   - Price trend analysis (bullish/bearish patterns)
+   - News sentiment analysis
+   - Upcoming events (earnings, dividends)
+   - AI-powered investment recommendations
 
-1. **Searches** for all available stocks in that sector
-2. **Categorizes** them into three groups:
-   - **High-value**: Price > $100
-   - **Medium-value**: Price $10-$100
-   - **Low-value**: Price < $10
-3. **Analyzes** each stock with:
-   - Price trend analysis (bullish/bearish)
-   - Recent news with sentiment analysis
-   - Upcoming events (earnings, dividends, product launches)
+### 📊 Complete Analysis Pipeline
+
+When you query any sector/industry:
+
+1. **Semantic Search** → Finds relevant companies from SEC filings database
+2. **Real-Time Fetching** → Gets current prices, changes, market cap from Yahoo Finance
+3. **Categorization** → Groups stocks by price range
+4. **Deep Analysis** → For each stock:
+   - Price trends & momentum
+   - Recent news with sentiment
+   - Upcoming events calendar
    - Investment recommendation
 
-## 📦 Installation
+### 🔍 ChromaDB Integration
+
+- **Automatic Build**: First query triggers one-time setup (20-40 min)
+- **8,000+ Companies**: Indexed from SEC EDGAR filings
+- **Semantic Search**: Natural language understanding of sectors/industries
+- **Persistent Storage**: Database saved permanently for instant future queries
+- **Streaming Progress**: Real-time updates during initial build
+
+## 📦 Installation & Quick Start
 
 ### Prerequisites
 
-- Python 3.10 or higher
-- pip package manager
+- **Python 3.10+** or higher
+- **pip** package manager
+- **OpenAI API Key** for embeddings
+- **SEC-compliant User-Agent** for filing downloads
 
-### Setup
+### Quick Setup (5 minutes)
 
 ```bash
-# Clone or navigate to the project directory
+# 1. Navigate to project directory
 cd /Users/pradeepsahu/dev_data/StockSearhMCP
 
-# Create a virtual environment (using .venv as the directory name)
-python -m venv .venv
+# 2. Create virtual environment
+python3 -m venv .venv
 
-# Activate the virtual environment
-# On macOS/Linux:
-source .venv/bin/activate
-# On Windows:
-# .venv\Scripts\activate
+# 3. Activate virtual environment
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate   # Windows
 
-# Install the package in development mode
+# 4. Install dependencies
 pip install -e .
+
+# 5. Set environment variables
+export OPENAI_API_KEY="your-openai-api-key"
+export SEC_API_USER_AGENT="YourCompany contact@youremail.com"
+
+# 6. (Optional) Test installation
+python test_installation.py
+```
+
+### Verify Installation
+
+```bash
+# Quick test - should show analysis of technology stocks
+python examples/basic_usage.py
 ```
 
 ## 🗄️ ChromaDB Setup - Automatic on First Use!
@@ -186,82 +244,160 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
 }
 ```
 
-## 🎯 Usage
+## 🎯 Usage - Two Ways to Access
 
-Once configured, you can use the server through MCP-compatible clients like Claude Desktop.
+### 1. 🌐 Gradio Web Interface (Easiest)
 
-### 🤖 How Claude Decides to Use the Tool
+**Launch the web interface for a user-friendly experience:**
 
-**Claude AI automatically decides** when to call the `analyze_sector` tool based on your query:
+```bash
+# Option 1: Using launch script
+./launch_gradio.sh
 
-**✅ Tool WILL be called:**
-- "Analyze technology stocks"
-- "Show me healthcare sector analysis"
-- "What are the best finance stocks?"
-- "Use analyze_sector for energy"
-- "Search for semiconductor companies"
+# Option 2: Direct Python
+python gradio_app.py
+```
 
-**❌ Tool might NOT be called:**
-- "Tell me about stocks" (too vague, Claude answers from knowledge)
-- "What's a good investment?" (general financial advice)
-- "Explain the stock market" (educational, not sector analysis)
+**Access at:** `http://localhost:7860`
 
-**💡 Pro Tip:** Be specific about sectors/industries to ensure the tool is used. You can also explicitly say "use the tool" or "analyze the sector."
+**Features:**
+- 🎨 Beautiful web UI with real-time progress bars
+- 💡 Example sectors (technology, healthcare, biotech, etc.)
+- 📊 Instant analysis results in formatted reports
+- 📋 Copy button for results
+- 🔄 Database status indicator
+- 📱 Mobile-responsive design
 
-**Where it happens:** The tool call is handled by the MCP server in `src/stock_research_mcp/server.py` at the `@self.server.call_tool()` decorator, which routes to the multi-agent analysis pipeline.
+**Example Usage:**
+1. Enter "technology" or click example button
+2. Click "Analyze Sector"
+3. Watch progress during first-time ChromaDB build (20-40 min)
+4. Get instant results on subsequent queries
+5. Copy/share analysis reports
 
-### How It Works (Complete Flow)
+**Advantages:**
+- ✅ No MCP configuration needed
+- ✅ Works without Claude Desktop
+- ✅ Visual progress tracking
+- ✅ Easy to share with team
+- ✅ Direct API access to all features
 
-**🎬 First Query** (one-time setup):
+### 2. 🤖 Claude Desktop (MCP Integration)
 
-1. **User Query** → You ask Claude: "Analyze stocks in the biotechnology sector"
+**Use through Claude Desktop for AI-powered interaction:**
 
-2. **Automatic ChromaDB Build** → System detects no database and builds it:
-   - Shows real-time progress: "📥 Fetching company tickers... ✅ Found 8,000 companies"
-   - Downloads SEC filings with updates: "📊 Progress: 100/8000 processed"
-   - Creates embeddings and stores in ChromaDB
-   - Takes 20-40 minutes with streaming progress updates
-   - Database persists permanently on disk
+Once configured (see Configuration section), Claude automatically decides when to use the tool.
 
-3. **Query Execution** → After build completes:
-   - Semantic search finds biotechnology companies
-   - Multi-agent analysis runs
-   - Results displayed
+**✅ Queries that trigger the tool:**
+```
+"Analyze technology stocks"
+"Show me healthcare sector analysis"
+"What are the best semiconductor companies?"
+"Use analyze_sector for renewable energy"
+"Search for biotechnology stocks"
+```
 
-**⚡ Subsequent Queries** (instant):
+**❌ Queries that might NOT trigger the tool:**
+```
+"Tell me about stocks" (too vague - Claude uses general knowledge)
+"What's a good investment?" (general advice, not sector-specific)
+"Explain the stock market" (educational, not analysis)
+```
 
-1. **User Query** → You ask: "Show me semiconductor stocks"
+**💡 Pro Tips:**
+- Be specific about sectors/industries
+- Use action words: "analyze", "search", "find"
+- Explicitly say "use the tool" if needed
+- Start fresh conversation for reliable tool usage
 
-2. **ChromaDB Semantic Search** → Instant lookup from persistent database:
-   - Converts "semiconductor" to embedding
-   - Finds matching companies in SEC filings
-   - Returns tickers (NVDA, AMD, INTC, etc.)
+### How the System Works
 
-3. **Multi-Agent Processing**:
-   - **Search Agent**: Uses ChromaDB + real-time APIs
-   - **Categorization Agent**: Groups by price
-   - **Analysis Agent**: News, events, recommendations
+**🎬 First Query Flow** (one-time setup):
 
-4. **Result Display** → Comprehensive report in seconds
+```
+User asks: "Analyze biotechnology sector"
+         ↓
+System detects: No ChromaDB found
+         ↓
+Automatic Build Starts (streaming progress):
+  📥 Step 1: Fetching company tickers from SEC → 8,000 companies
+  📄 Step 2: Downloading filings (20-40 min)
+     Progress: 100/8000, 200/8000... (updates every 10 companies)
+     💾 Indexing batches to ChromaDB
+  🔍 Step 3: Verifying index
+  ✅ Step 4: Build complete! → 7,500 companies indexed
+         ↓
+Query Execution:
+  - Semantic search finds biotechnology companies
+  - Multi-agent analysis runs
+  - Results displayed
+```
 
-### Example Queries
+**⚡ Subsequent Queries** (instant - <1 second):
 
-Ask Claude:
+```
+User asks: "Show me semiconductor stocks"
+         ↓
+ChromaDB Semantic Search (instant):
+  - Convert "semiconductor" to embedding
+  - Find matches in SEC filings
+  - Returns: NVDA, AMD, INTC, QCOM, etc.
+         ↓
+Multi-Agent Processing:
+  ├─→ Search Agent: Fetch real-time prices (Yahoo Finance)
+  ├─→ Categorization Agent: Group by price ranges
+  └─→ Analysis Agent: News, events, recommendations
+         ↓
+Comprehensive Report (formatted & delivered)
+```
+
+### Example Queries (Any Sector/Industry!)
+
+**Technology:**
 - "Analyze stocks in the technology sector"
-- "Show me biotechnology companies and their analysis"
-- "What are the best renewable energy stocks right now?"
-- "Give me a breakdown of artificial intelligence sector stocks"
-- "Find companies in the semiconductor industry"
+- "Show me semiconductor companies"
+- "Find artificial intelligence stocks"
 
-**Note**: The ChromaDB enables natural language sector queries! You can ask about specific industries, and the semantic search will find relevant companies based on their actual business descriptions from SEC filings.
+**Healthcare:**
+- "Analyze biotechnology companies"
+- "Show me pharmaceutical stocks"
+- "Find medical device companies"
 
-### 📋 Viewing MCP Server Logs
+**Other Industries:**
+- "What are the best renewable energy stocks?"
+- "Analyze e-commerce companies"
+- "Find cloud computing stocks"
+- "Show me cybersecurity companies"
 
-**Log locations:**
-- Main server log: `~/Library/Logs/Claude/mcp-server-stock-research.log`
-- General MCP log: `~/Library/Logs/Claude/mcp.log`
+**Natural Language Works!**
+The ChromaDB semantic search understands your intent based on SEC filing business descriptions, so you can query any industry using natural language.
 
-**Useful commands:**
+### Available MCP Tool
+
+#### `analyze_sector`
+
+**Description:** Performs comprehensive multi-agent analysis on any sector or industry.
+
+**Parameters:**
+- `sector` (string, required): Natural language description of sector/industry
+
+**Supported Sectors:**
+- **ANY sector or industry!** Thanks to ChromaDB semantic search on 8,000+ SEC filings
+- Not limited to predefined categories - uses natural language understanding
+
+**Examples:**
+```json
+{"sector": "technology"}
+{"sector": "biotechnology"}
+{"sector": "renewable energy"}
+{"sector": "artificial intelligence"}
+{"sector": "semiconductor manufacturing"}
+```
+
+### 📋 Debugging & Logs
+
+**View MCP Server Logs:**
+
 ```bash
 # Follow live logs
 tail -f ~/Library/Logs/Claude/mcp-server-stock-research.log
@@ -269,96 +405,185 @@ tail -f ~/Library/Logs/Claude/mcp-server-stock-research.log
 # View last 100 lines
 tail -100 ~/Library/Logs/Claude/mcp-server-stock-research.log
 
-# Search for specific stock
-grep "AAPL" ~/Library/Logs/Claude/mcp-server-stock-research.log
-
-# See only errors
+# Search for errors
 grep "ERROR" ~/Library/Logs/Claude/mcp-server-stock-research.log
 
 # View analysis reports
 grep -A 50 "STOCK ANALYSIS REPORT" ~/Library/Logs/Claude/mcp-server-stock-research.log
+
+# Search for specific stock
+grep "AAPL" ~/Library/Logs/Claude/mcp-server-stock-research.log
 ```
 
-**What you'll see:**
+**What You'll See in Logs:**
 - Tool calls: `Processing sector analysis request for: technology`
 - Stock fetching: `Fetched AAPL: $276.97`
 - Agent workflow: `[StockSearchAgent]`, `[StockCategorizationAgent]`, `[StockAnalysisAgent]`
-- ChromaDB operations: `Found 15 stocks in technology sector`
-- Full analysis results sent to Claude
-
-### Available Tools
-
-#### `analyze_sector`
-
-Performs comprehensive multi-agent analysis on a sector.
-
-**Parameters:**
-- `sector` (string, required): The sector to analyze
-
-**Supported Sectors:**
-- **Any sector or industry!** Thanks to ChromaDB semantic search on SEC filings
-- Examples: technology, healthcare, finance, energy, biotechnology, semiconductors, renewable energy, artificial intelligence, e-commerce, automotive, pharmaceuticals, real estate, aerospace, telecommunications, retail, etc.
-
-**How it works:** The system uses semantic search on company business descriptions from SEC filings, so you can query any industry using natural language - not limited to predefined categories!
-
-**Example:**
-```json
-{
-  "sector": "technology"
-}
-```
+- ChromaDB: `Found 15 stocks in technology sector`
+- Full analysis results
 
 ## 🏗️ Architecture
 
-### Multi-Agent Design with ChromaDB Integration
+### System Flow Diagram
 
 ```
-User Query: "Analyze biotechnology sector"
-    ↓
-Orchestrator
-    ↓
-    ├─→ StockSearchAgent
-    │    ├─→ Query ChromaDB (semantic search on SEC filings)
-    │    │   Returns: [MRNA, GILD, BIIB, VRTX, ...]
-    │    └─→ Fetch real-time data from Yahoo Finance API
-    ↓
-    ├─→ StockCategorizationAgent
-    │    └─→ Group by price (High: >$100, Medium: $10-$100, Low: <$10)
-    ↓
-    └─→ StockAnalysisAgent (for each stock)
-         ├─→ Price Analysis (trend, momentum)
-         ├─→ News Sentiment (from APIs)
-         ├─→ Event Calendar (earnings, dividends)
-         └─→ Investment Recommendation
-    ↓
-Final Report to User
+┌─────────────────────────────────────────────────────────────┐
+│                    USER QUERY                               │
+│         "Analyze stocks in biotechnology sector"            │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              MCP SERVER (server.py)                         │
+│  - Receives query via stdio                                 │
+│  - Validates input                                          │
+│  - Routes to orchestrator                                   │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│         ORCHESTRATOR (orchestrator.py)                      │
+│  - Coordinates all 3 agents                                 │
+│  - Manages workflow pipeline                                │
+│  - Formats final output                                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+        ┌────────────────┴────────────────┐
+        │                                  │
+        ▼                                  ▼
+┌─────────────────────┐         ┌─────────────────────────┐
+│  STEP 1: SEARCH     │         │  ChromaDB Integration   │
+│  ───────────────    │         │  ───────────────────    │
+│  StockSearchAgent   │         │  • Semantic search      │
+│                     │◄────────┤  • 8,000+ companies     │
+│  Actions:           │         │  • SEC filings data     │
+│  • Query ChromaDB   │         │  • Natural language     │
+│  • Yahoo Finance    │         └─────────────────────────┘
+│  • Return stocks    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────────┐
+│  STEP 2: CATEGORIZE     │
+│  ───────────────────    │
+│  StockCategorization    │
+│                         │
+│  • High: >$100          │
+│  • Medium: $10-$100     │
+│  • Low: <$10            │
+└──────────┬──────────────┘
+           │
+           ▼
+┌──────────────────────────────────────────────────────────┐
+│  STEP 3: ANALYZE (for each stock)                        │
+│  ─────────────────────────────                           │
+│  StockAnalysisAgent                                      │
+│                                                          │
+│  ┌──────────────────────────────────────────────┐       │
+│  │ Price Analysis: trend, momentum, support     │       │
+│  └──────────────────────────────────────────────┘       │
+│  ┌──────────────────────────────────────────────┐       │
+│  │ News Collection: sentiment, sources          │       │
+│  └──────────────────────────────────────────────┘       │
+│  ┌──────────────────────────────────────────────┐       │
+│  │ Events: earnings, dividends, launches        │       │
+│  └──────────────────────────────────────────────┘       │
+│  ┌──────────────────────────────────────────────┐       │
+│  │ Recommendations: signals, advice, risk       │       │
+│  └──────────────────────────────────────────────┘       │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   FORMATTED REPORT                          │
+│  ═══════════════════════════════════════════════════       │
+│  STOCK ANALYSIS REPORT - BIOTECHNOLOGY SECTOR               │
+│  ═══════════════════════════════════════════════════       │
+│  HIGH-VALUE STOCKS (7): MRNA, GILD, BIIB...               │
+│  MEDIUM-VALUE STOCKS (12): VRTX, REGN...                   │
+│  LOW-VALUE STOCKS (8): Small caps...                       │
+│                                                             │
+│  Full analysis with news, events, recommendations          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Key Innovation**: The system uses **semantic search** on SEC filing data stored in ChromaDB, allowing it to understand natural language sector queries and find relevant companies dynamically, rather than relying on hardcoded mappings.
+**Key Innovation:** Semantic search on SEC filing data enables natural language understanding of sectors/industries - no hardcoded mappings required!
 
 ### Project Structure
 
 ```
-src/
-├── stock_research_mcp/
-│   ├── __init__.py              # Package initialization
-│   ├── server.py                # MCP server entry point
-│   ├── types.py                 # Data models (Pydantic)
-│   └── agents/
-│       ├── __init__.py
-│       ├── stock_search_agent.py           # Agent 1: Search (uses ChromaDB)
-│       ├── stock_categorization_agent.py   # Agent 2: Categorize
-│       ├── stock_analysis_agent.py         # Agent 3: Analyze
-│       ├── orchestrator.py                 # Coordinates all agents
-│       ├── real_api_fetcher.py            # Real API integrations
-│       └── sector_ticker_fetcher.py       # ChromaDB query helper
-└── sector/
-    ├── fetch_tickers.py         # Fetch company tickers from SEC
-    ├── fetch_filings.py         # Download SEC filings
-    ├── extract_text.py          # Extract business sections
-    ├── embeddings_and_chroma.py # OpenAI embeddings + ChromaDB
-    ├── builder.py               # Build ChromaDB index (run first!)
-    └── search_api.py            # Optional: FastAPI search interface
+StockSearhMCP/
+├── src/
+│   ├── stock_research_mcp/           # Main package
+│   │   ├── server.py                    → MCP server entry point
+│   │   ├── types.py                     → Pydantic data models
+│   │   └── agents/                      → Multi-agent system
+│   │       ├── orchestrator.py             → Coordinates all agents
+│   │       ├── stock_search_agent.py       → Agent 1: Search
+│   │       ├── stock_categorization_agent.py → Agent 2: Categorize
+│   │       ├── stock_analysis_agent.py     → Agent 3: Analyze
+│   │       ├── sector_ticker_fetcher.py    → ChromaDB helper
+│   │       └── real_api_fetcher.py         → Yahoo Finance integration
+│   └── sector/                        # ChromaDB build system
+│       ├── builder.py                    → Main build script
+│       ├── fetch_tickers.py              → Get companies from SEC
+│       ├── fetch_filings.py              → Download 10-K/10-Q filings
+│       ├── extract_text.py               → Extract business descriptions
+│       ├── embeddings_and_chroma.py      → OpenAI + ChromaDB
+│       └── search_api.py                 → Optional: FastAPI interface
+├── gradio_app.py                      # Web interface
+├── test_gradio_setup.py               # Gradio verification
+├── launch_gradio.sh                   # Launch script
+├── examples/
+│   ├── basic_usage.py                 # Simple example
+│   └── real_api_integration.py        # API integration demo
+└── output/
+    └── chroma_db/                     # ChromaDB persistent storage
+```
+
+### Data Models (types.py)
+
+```python
+Stock                           # Company information
+├── symbol: str                 # AAPL, MSFT, etc.
+├── name: str                   # Apple Inc.
+├── price: float                # 175.43
+├── sector: str                 # Technology
+├── market_cap: float           # Optional
+├── change: float               # +1.35
+└── change_percent: float       # +0.77%
+
+StockCategory (Enum)            # Price ranges
+├── HIGH      (> $100)
+├── MEDIUM    ($10-$100)
+└── LOW       (< $10)
+
+PriceAnalysis                   # Technical analysis
+├── current_price: float
+├── trend: str                  # bullish/bearish
+├── support: float              # Support level
+└── resistance: float           # Resistance level
+
+NewsItem                        # News articles
+├── title: str
+├── source: str
+├── date: str
+├── sentiment: str              # positive/negative/neutral
+└── summary: str
+
+EventItem                       # Upcoming events
+├── type: str                   # Earnings Call, Dividend, etc.
+├── date: str
+├── description: str
+└── impact: str                 # high/medium/low
+
+StockAnalysis                   # Complete analysis
+├── stock: Stock
+├── category: StockCategory
+├── price_analysis: PriceAnalysis
+├── news: List[NewsItem]
+├── events: List[EventItem]
+└── recommendation: str
 ```
 
 ## 🔧 Development
@@ -485,9 +710,9 @@ Install python-dotenv:
 pip install python-dotenv
 ```
 
-## 📊 Output Format
+## 📊 Sample Output
 
-The analysis report includes:
+The system generates comprehensive reports with this format:
 
 ```
 ================================================================================
@@ -517,66 +742,76 @@ HIGH-VALUE STOCKS (Price > $100)
 
 ## 🛠️ Troubleshooting
 
-### ChromaDB not found / No stocks returned
+### ChromaDB Issues
 
-**Problem**: System falls back to hardcoded sector mappings or returns empty results.
+**Problem: ChromaDB not found / No stocks returned**
 
-**Solution**:
-1. Verify ChromaDB was built: `ls -la output/chroma_db/`
-2. Check environment variable: `echo $CHROMA_PERSIST_DIR`
-3. Rebuild index: `python src/sector/builder.py`
-4. Set `CHROMA_PERSIST_DIR` in MCP config to absolute path: `/Users/pradeepsahu/dev_data/StockSearhMCP/output/chroma_db`
+✅ **Solutions:**
+```bash
+# 1. Verify ChromaDB exists
+ls -la output/chroma_db/
 
-### ChromaDB query error: "Expected include item to be..."
+# 2. Check environment variable
+echo $CHROMA_PERSIST_DIR
 
-**Problem**: Error in logs: `Error querying ChromaDB: Expected include item to be one of documents, embeddings, metadatas, distances, uris, data, got ids in query.`
+# 3. Rebuild if needed
+python src/sector/builder.py
 
-**Status**: ✅ **FIXED** - This error has been resolved in the latest version. ChromaDB's `query()` method always returns `ids` by default, so `"ids"` should not be in the `include` parameter.
+# 4. Use absolute path in MCP config
+CHROMA_PERSIST_DIR="/Users/pradeepsahu/dev_data/StockSearhMCP/output/chroma_db"
+```
 
-**If you still see this error**: Make sure you have the latest code from `src/stock_research_mcp/agents/sector_ticker_fetcher.py`
+**Problem: ChromaDB query error: "Expected include item to be..."**
 
-### Server won't start
+✅ **Status: FIXED** in latest version
+- ChromaDB's `query()` always returns `ids` by default
+- Latest code removes `"ids"` from `include` parameter
+- Update from `src/stock_research_mcp/agents/sector_ticker_fetcher.py` if needed
 
-- Ensure virtual environment is activated
-- Check Python version: `python --version` (should be 3.10+)
-- Reinstall dependencies: `pip install -e .`
-- Verify `OPENAI_API_KEY` is set
+### MCP Connection Issues
 
-### Import errors
+**Problem: Claude Desktop doesn't show the tool**
 
-- Verify PYTHONPATH in your MCP config
-- Make sure you're in the correct directory
-- Check that all agent files exist
-- Ensure ChromaDB directory is accessible
+✅ **Complete Checklist:**
 
-### Builder script fails
+1. **Config Location** (macOS):
+   ```bash
+   # Must be in user home, not system /Library
+   ~/Library/Application Support/Claude/claude_desktop_config.json
+   ```
 
-**SEC 403 Error**:
-- Set `SEC_API_USER_AGENT` with your contact email
-- Example: `"YourCompany contact@example.com"`
+2. **Absolute Python Path**:
+   ```json
+   "command": "/Users/pradeepsahu/dev_data/StockSearhMCP/.venv/bin/python"
+   ```
+   ❌ NOT: `"python"` or `"python3"`
 
-**OpenAI API Error**:
-- Verify `OPENAI_API_KEY` is valid
-- Check API quota/billing at platform.openai.com
+3. **Valid API Key**:
+   ```json
+   "OPENAI_API_KEY": "sk-proj-actual-key-here"
+   ```
+   ❌ NOT: `"your-openai-api-key-here"`
 
-**Download timeouts**:
-- Reduce `MAX_WORKERS` (try 4 instead of 8)
-- Check internet connection
+4. **JSON Syntax**:
+   - Validate at https://jsonlint.com
+   - No trailing commas
+   - Proper quotes and brackets
 
-### MCP connection issues
+5. **Full Restart**:
+   ```bash
+   # Quit (Cmd+Q), wait 5 sec, reopen
+   ```
 
-**Problem**: Claude Desktop doesn't show the stock-research tool or can't connect to server.
+6. **Check Connection**:
+   - Look for 🔌 green plug icon (bottom-left of Claude Desktop)
+   - Click to see connected servers list
 
-**Solution checklist:**
-1. ✅ **Config location**: Must be `~/Library/Application Support/Claude/claude_desktop_config.json` (user home, not system `/Library`)
-2. ✅ **Absolute python path**: Use `/Users/pradeepsahu/dev_data/StockSearhMCP/.venv/bin/python`, NOT just `"python"`
-3. ✅ **Valid API key**: Replace `"your-openai-api-key-here"` with actual OpenAI key
-4. ✅ **JSON syntax**: Validate at https://jsonlint.com (no trailing commas)
-5. ✅ **Full restart**: Quit Claude Desktop (Cmd+Q), wait 5 seconds, reopen
-6. ✅ **Check connection**: Look for 🔌 green plug icon in bottom-left corner of Claude Desktop
-7. ✅ **View logs**: `tail -f ~/Library/Logs/Claude/mcp*.log` to see connection errors
+7. **View Logs**:
+   ```bash
+   tail -f ~/Library/Logs/Claude/mcp*.log
+   ```
 
-**Test server manually:**
+**Test Server Manually:**
 ```bash
 cd /Users/pradeepsahu/dev_data/StockSearhMCP
 source .venv/bin/activate
@@ -585,10 +820,97 @@ python -m stock_research_mcp.server
 # Press Ctrl+D to exit
 ```
 
-**Force tool usage in Claude:**
-- Bad: "Tell me about tech stocks" (Claude might answer from knowledge)
-- Good: "Analyze technology sector stocks" (Claude will use the tool)
-- Explicit: "Use the analyze_sector tool for healthcare"
+**Force Tool Usage in Claude:**
+- ❌ Bad: "Tell me about tech stocks" (Claude uses general knowledge)
+- ✅ Good: "Analyze technology sector stocks" (forces tool call)
+- ✅ Explicit: "Use the analyze_sector tool for healthcare"
+
+### Installation & Server Issues
+
+**Problem: Server won't start**
+
+```bash
+# Check Python version (need 3.10+)
+python --version
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Reinstall dependencies
+pip install -e .
+
+# Verify OpenAI key
+echo $OPENAI_API_KEY
+```
+
+**Problem: Import errors**
+
+```bash
+# Check PYTHONPATH in MCP config
+echo $PYTHONPATH
+
+# Verify all files exist
+ls -la src/stock_research_mcp/agents/
+
+# Check ChromaDB access
+ls -la output/chroma_db/
+```
+
+### Builder Script Issues
+
+**Problem: SEC 403 Forbidden Error**
+
+✅ Set SEC-compliant User-Agent:
+```bash
+export SEC_API_USER_AGENT="YourCompany contact@example.com"
+```
+
+**Problem: OpenAI API Error**
+
+✅ Solutions:
+```bash
+# Verify key is valid
+echo $OPENAI_API_KEY
+
+# Check quota/billing
+# Visit: https://platform.openai.com/usage
+```
+
+**Problem: Download timeouts**
+
+✅ Reduce workers:
+```bash
+export MAX_WORKERS="4"  # Instead of 8
+export BATCH_SIZE="32"  # Instead of 64
+```
+
+### Gradio Interface Issues
+
+**Problem: Port 7860 already in use**
+
+```bash
+# Kill existing process
+lsof -ti:7860 | xargs kill -9
+
+# Or change port in gradio_app.py
+server_port=8080  # Use different port
+```
+
+**Problem: Missing Gradio**
+
+```bash
+pip install gradio
+# Or
+uv pip install gradio
+```
+
+**Problem: OpenAI key not working**
+
+Check `.env` file:
+```bash
+cat .env
+# Should have: OPENAI_API_KEY=sk-proj-actual-key
+```
 
 ## 🔄 Updating the ChromaDB Index
 

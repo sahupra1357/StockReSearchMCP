@@ -35,3 +35,7 @@ uvicorn==0.22.0
 httpx==0.24.1
 tqdm==4.66.1
 python-dotenv==1.0.0
+
+# Gradio web interface
+gradio>=4.0.0
+
