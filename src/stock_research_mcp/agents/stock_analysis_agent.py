@@ -3,6 +3,7 @@
 import logging
 from typing import List
 from datetime import datetime, timedelta
+import json
 
 from ..types import (
     Stock, 
@@ -50,7 +51,9 @@ class StockAnalysisAgent:
             # Perform parallel analysis
             price_analysis = await self._analyze_price_movement(stock)
             news = await self._fetch_stock_news(stock)
+            logger.info(f"Fetched {len(news)} news items for {stock.symbol}")
             events = await self._fetch_stock_events(stock)
+            logger.info(f"Fetched {len(events)} events for {stock.symbol}")
             
             # Generate recommendation
             recommendation = self._generate_recommendation(
@@ -155,79 +158,228 @@ class StockAnalysisAgent:
     
     async def _fetch_stock_news(self, stock: Stock) -> List[NewsItem]:
         """
-        Fetch news for a stock.
+        Fetch news for a stock from Yahoo Finance.
         
-        In production, integrate with:
-        - News API
-        - Finnhub News
-        - Alpha Vantage News
-        - Web scraping from financial news sites
+        Uses yfinance library to get real news articles.
+        Falls back to mock data if yfinance is not available or fails.
         """
-        today = datetime.now()
+        try:
+            import yfinance as yf
+            
+            # Fetch news from Yahoo Finance
+            ticker = yf.Ticker(stock.symbol)
+            news_items = ticker.news
+            
+            if not news_items:
+                logger.warning(f"No news found for {stock.symbol}, using mock data")
+                #return self._get_mock_news(stock)
+            
+            # Convert Yahoo Finance news to NewsItem objects
+            parsed_news = []
+            for item in news_items[:5]:  # Limit to top 5 news items
+                try:
+                    # Handle nested structure: check if 'content' key exists
+                    content = item.get('content', item)
+                    
+                    # Extract title from nested structure
+                    title = content.get('title', item.get('title', ''))
+                    
+                    # Extract summary/description
+                    summary = content.get('summary', content.get('description', ''))
+                    if not summary:
+                        summary = item.get('summary', item.get('description', ''))
+                    
+                    # Determine sentiment based on title keywords
+                    sentiment = self._analyze_sentiment(title)
+                    
+                    # Convert timestamp to date string
+                    # Try multiple possible timestamp fields
+                    timestamp = (
+                        content.get('providerPublishTime') or 
+                        item.get('providerPublishTime') or
+                        content.get('pubDate') or
+                        item.get('pubDate') or
+                        0
+                    )
+                    
+                    if timestamp:
+                        # Handle ISO format strings (e.g., "2025-11-27T14:00:00Z")
+                        if isinstance(timestamp, str):
+                            try:
+                                date = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).strftime("%Y-%m-%d")
+                            except:
+                                date = timestamp.split('T')[0]  # Fallback: just get date part
+                        else:
+                            # Handle Unix timestamp
+                            date = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+                    else:
+                        date = datetime.now().strftime("%Y-%m-%d")
+                    
+                    # Extract publisher/source
+                    source = (
+                        content.get('publisher', {}).get('name') if isinstance(content.get('publisher'), dict) 
+                        else content.get('publisher') or 
+                        item.get('publisher') or 
+                        'Yahoo Finance'
+                    )
+                    
+                    news_item = NewsItem(
+                        title=title,
+                        source=source,
+                        date=date,
+                        sentiment=sentiment,
+                        summary=summary[:200] if summary else ''
+                    )
+                    parsed_news.append(news_item)
+                    logger.info(f"Fetched news: {title[:50]}...")
+                    
+                except Exception as parse_error:
+                    logger.warning(f"Failed to parse news item: {parse_error}")
+                    continue
+            
+            return parsed_news if parsed_news else ""
+                    
+        except ImportError:
+            logger.warning("yfinance not installed. Install with: pip install yfinance")
+            #return self._get_mock_news(stock)
+        except Exception as e:
+            logger.warning(f"Failed to fetch news for {stock.symbol}: {e}")
+            # return self._get_mock_news(stock)
+    
+    def _analyze_sentiment(self, text: str) -> str:
+        """
+        Simple sentiment analysis based on keywords.
         
-        # Mock news data
-        sentiment = "positive" if (stock.change_percent or 0) > 0 else "neutral"
+        For production, use proper sentiment analysis:
+        - TextBlob
+        - VADER sentiment analyzer
+        - Hugging Face transformers (FinBERT)
+        """
+        text_lower = text.lower()
         
-        mock_news = [
-            NewsItem(
-                title=f"{stock.name} reports quarterly earnings",
-                source="Financial Times",
-                date=today.strftime("%Y-%m-%d"),
-                sentiment=sentiment,
-                summary=f"{stock.name} released their quarterly earnings report showing mixed results."
-            ),
-            NewsItem(
-                title=f"Analysts upgrade {stock.symbol} rating",
-                source="Bloomberg",
-                date=(today - timedelta(days=2)).strftime("%Y-%m-%d"),
-                sentiment="positive",
-                summary=f"Several analysts have upgraded their rating on {stock.symbol} citing strong fundamentals."
-            ),
-            NewsItem(
-                title=f"Market volatility affects {stock.name}",
-                source="Reuters",
-                date=(today - timedelta(days=5)).strftime("%Y-%m-%d"),
-                sentiment="negative",
-                summary=f"Recent market volatility has impacted {stock.name}'s stock performance."
-            )
+        positive_words = [
+            'surge', 'gain', 'up', 'rise', 'jump', 'rally', 'upgrade',
+            'beat', 'strong', 'growth', 'profit', 'success', 'high',
+            'soar', 'boost', 'improve', 'positive', 'bullish'
         ]
         
-        return mock_news
-    
+        negative_words = [
+            'fall', 'drop', 'down', 'decline', 'loss', 'weak', 'miss',
+            'cut', 'downgrade', 'crash', 'plunge', 'concern', 'worry',
+            'negative', 'bearish', 'slump', 'struggle', 'warning'
+        ]
+        
+        positive_count = sum(1 for word in positive_words if word in text_lower)
+        negative_count = sum(1 for word in negative_words if word in text_lower)
+        
+        if positive_count > negative_count:
+            return "positive"
+        elif negative_count > positive_count:
+            return "negative"
+        else:
+            return "neutral"
+        
     async def _fetch_stock_events(self, stock: Stock) -> List[EventItem]:
         """
-        Fetch events for a stock.
+        Fetch actual events for a stock from Yahoo Finance.
         
-        In production, integrate with:
-        - Earnings calendar APIs
-        - Financial event calendars
-        - Company investor relations pages
+        Uses yfinance library to get calendar events including:
+        - Earnings dates
+        - Dividend dates
+        - Ex-dividend dates
+        - Splits
+        
+        Falls back to mock data if yfinance is not available or fails.
         """
-        today = datetime.now()
-        
-        # Mock events data
-        mock_events = [
-            EventItem(
-                type="Earnings Call",
-                date=(today + timedelta(days=30)).strftime("%Y-%m-%d"),
-                description=f"Q4 {today.year} Earnings Call",
-                impact="high"
-            ),
-            EventItem(
-                type="Dividend Payment",
-                date=(today + timedelta(days=15)).strftime("%Y-%m-%d"),
-                description="Quarterly dividend payment",
-                impact="medium"
-            ),
-            EventItem(
-                type="Product Launch",
-                date=(today + timedelta(days=45)).strftime("%Y-%m-%d"),
-                description="New product line announcement expected",
-                impact="medium"
-            )
-        ]
-        
-        return mock_events
+        try:
+            import yfinance as yf
+            
+            # Fetch calendar data from Yahoo Finance
+            ticker = yf.Ticker(stock.symbol)
+            calendar = ticker.calendar
+            
+            #logger.info(f"Fetched calendar for {stock.symbol}: {calendar})")
+            events = []
+            
+            # Extract earnings date
+            if calendar is not None and 'Earnings Date' in calendar:
+                earnings_dates = calendar['Earnings Date']
+                if not isinstance(earnings_dates, (list, tuple)):
+                    earnings_dates = [earnings_dates]
+                
+                for i, earnings_date in enumerate(earnings_dates):
+                    if earnings_date and str(earnings_date) != 'NaT':
+                        try:
+                            # Convert to datetime if it's a timestamp
+                            if hasattr(earnings_date, 'strftime'):
+                                date_str = earnings_date.strftime("%Y-%m-%d")
+                            else:
+                                date_str = str(earnings_date).split()[0]
+                            
+                            events.append(EventItem(
+                                type="Earnings Report",
+                                date=date_str,
+                                description=f"{stock.symbol} earnings announcement",
+                                impact="high"
+                            ))
+                            logger.info(f"Found earnings date for {stock.symbol}: {date_str}")
+                        except Exception as e:
+                            logger.warning(f"Could not parse earnings date: {e}")
+            
+            # Get dividend information
+            try:
+                dividends = ticker.dividends
+                if dividends is not None and not dividends.empty:
+                    # Get the most recent dividend
+                    last_dividend = dividends.iloc[-1]
+                    last_dividend_date = dividends.index[-1]
+                    
+                    # Estimate next dividend date (typically quarterly)
+                    next_dividend_date = last_dividend_date + timedelta(days=90)
+                    
+                    if next_dividend_date > datetime.now():
+                        events.append(EventItem(
+                            type="Dividend Payment",
+                            date=next_dividend_date.strftime("%Y-%m-%d"),
+                            description=f"Expected quarterly dividend (last: ${last_dividend:.2f})",
+                            impact="medium"
+                        ))
+                        logger.info(f"Estimated next dividend for {stock.symbol}: {next_dividend_date.strftime('%Y-%m-%d')}")
+            except Exception as e:
+                logger.debug(f"Could not fetch dividend info for {stock.symbol}: {e}")
+            
+            # Get ex-dividend date if available
+            try:
+                info = ticker.info
+                if 'exDividendDate' in info and info['exDividendDate']:
+                    ex_div_timestamp = info['exDividendDate']
+                    ex_div_date = datetime.fromtimestamp(ex_div_timestamp)
+                    
+                    # Only include if it's in the future
+                    if ex_div_date > datetime.now():
+                        events.append(EventItem(
+                            type="Ex-Dividend Date",
+                            date=ex_div_date.strftime("%Y-%m-%d"),
+                            description="Last day to buy to receive dividend",
+                            impact="medium"
+                        ))
+                        logger.info(f"Found ex-dividend date for {stock.symbol}: {ex_div_date.strftime('%Y-%m-%d')}")
+            except Exception as e:
+                logger.debug(f"Could not fetch ex-dividend date for {stock.symbol}: {e}")
+            
+            # If we found real events, return them
+            if events:
+                return events
+            else:
+                logger.warning(f"No events found for {stock.symbol}, using mock data")
+                #return self._get_mock_events(stock)
+                
+        except ImportError:
+            logger.warning("yfinance not installed. Install with: pip install yfinance")
+            #return self._get_mock_events(stock)
+        except Exception as e:
+            logger.warning(f"Failed to fetch events for {stock.symbol}: {e}")
+            #return self._get_mock_events(stock)
     
     def _generate_recommendation(
         self,

@@ -93,7 +93,7 @@ class SectorTickerFetcher:
             
             if not results or not results.get("ids") or not results["ids"][0]:
                 logger.warning(f"No results from ChromaDB for sector: {sector}")
-                return self._get_from_fallback(sector, limit)
+                #return self._get_from_fallback(sector, limit)
             
             # Filter by relevance and extract tickers
             tickers = []
@@ -116,11 +116,11 @@ class SectorTickerFetcher:
                 return tickers[:limit]
             else:
                 logger.warning(f"No relevant tickers found in ChromaDB for {sector}, using fallback")
-                return self._get_from_fallback(sector, limit)
+                #return self._get_from_fallback(sector, limit)
                 
         except Exception as e:
             logger.error(f"Error querying ChromaDB: {e}")
-            return self._get_from_fallback(sector, limit)
+            #return self._get_from_fallback(sector, limit)
     
     def _get_from_fallback(self, sector: str, limit: int) -> List[str]:
         """
