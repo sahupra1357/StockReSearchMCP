@@ -46,7 +46,6 @@ class RealDataStockSearchAgent(StockSearchAgent):
         # 
         # return stocks
         
-        # For now, fall back to mock data
         return await super()._fetch_stocks_from_source(sector)
     
     def _get_sector_tickers(self, sector: str) -> List[str]:

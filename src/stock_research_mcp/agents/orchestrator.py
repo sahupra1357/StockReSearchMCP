@@ -185,10 +185,9 @@ class MultiAgentOrchestrator:
             stock = analysis.stock
             
             lines.append(f"\n📊 {stock.symbol} - {stock.name}")
-            lines.append(
-                f"   Price: ${stock.price:.2f} | "
-                f"Change: {stock.change_percent:.2f}%"
-            )
+            price_str = f"${stock.price:.2f}" if stock.price is not None else "N/A"
+            change_str = f"{stock.change_percent:.2f}%" if stock.change_percent is not None else "N/A"
+            lines.append(f"   Price: {price_str} | Change: {change_str}")
             lines.append(f"   Trend: {analysis.price_analysis.trend}")
             
             lines.append(f"\n   📰 Recent News ({len(analysis.news)}):")

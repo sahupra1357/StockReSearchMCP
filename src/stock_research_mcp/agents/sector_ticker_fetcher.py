@@ -62,8 +62,6 @@ class SectorTickerFetcher:
         """
         if self.use_chroma:
             return self._get_from_chroma(sector, limit, min_relevance)
-        else:
-            return self._get_from_fallback(sector, limit)
     
     def _get_from_chroma(
         self, 
@@ -93,10 +91,9 @@ class SectorTickerFetcher:
             
             if not results or not results.get("ids") or not results["ids"][0]:
                 logger.warning(f"No results from ChromaDB for sector: {sector}")
-                #return self._get_from_fallback(sector, limit)
             
             # Filter by relevance and extract tickers
-            tickers = []
+            tickers_set = set()
             ids = results["ids"][0]
             distances = results["distances"][0]
             metadatas = results.get("metadatas", [[]])[0]
@@ -105,96 +102,21 @@ class SectorTickerFetcher:
                 # ChromaDB returns distance (lower is better for cosine)
                 if distance <= min_relevance:
                     # Use the ID as ticker (builder.py stores ticker as ID)
-                    if ticker_id and ticker_id.strip():
-                        tickers.append(ticker_id.strip().upper())
-                        
-                        if len(tickers) >= limit:
-                            break
+                    # if ticker_id and ticker_id.strip():
+                    #     tickers.append(ticker_id.strip().upper())
+                    if metadata and "ticker" in metadata:
+                        ticker_upper = metadata["ticker"].upper()
+                        if ticker_upper not in tickers_set:
+                            tickers_set.add(ticker_upper)
             
-            if tickers:
-                logger.info(f"Found {len(tickers)} tickers from ChromaDB for {sector}")
-                return tickers[:limit]
+            if tickers_set:
+                logger.info(f"Found {len(tickers_set)} tickers from ChromaDB for {sector}")
+                return list(tickers_set)[:limit]
             else:
                 logger.warning(f"No relevant tickers found in ChromaDB for {sector}, using fallback")
-                #return self._get_from_fallback(sector, limit)
                 
         except Exception as e:
             logger.error(f"Error querying ChromaDB: {e}")
-            #return self._get_from_fallback(sector, limit)
-    
-    def _get_from_fallback(self, sector: str, limit: int) -> List[str]:
-        """
-        Fallback to hardcoded sector mappings.
-        
-        This ensures the system works even if ChromaDB is not set up.
-        """
-        sector_map = {
-            "technology": [
-                "AAPL", "MSFT", "GOOGL", "NVDA", "META", 
-                "AMD", "INTC", "CRM", "ORCL", "ADBE",
-                "CSCO", "IBM", "NOW", "SNOW", "DDOG"
-            ],
-            "healthcare": [
-                "JNJ", "UNH", "PFE", "ABBV", "LLY", 
-                "TMO", "MRK", "ABT", "DHR", "BMY"
-            ],
-            "finance": [
-                "JPM", "BAC", "V", "MA", "WFC", 
-                "GS", "MS", "C", "AXP", "BLK"
-            ],
-            "financial": [
-                "JPM", "BAC", "V", "MA", "WFC", 
-                "GS", "MS", "C", "AXP", "BLK"
-            ],
-            "energy": [
-                "XOM", "CVX", "COP", "SLB", "EOG",
-                "MPC", "PSX", "VLO", "OXY", "HAL"
-            ],
-            "consumer": [
-                "AMZN", "WMT", "HD", "MCD", "NKE",
-                "SBUX", "TGT", "COST", "LOW", "DG"
-            ],
-            "consumer discretionary": [
-                "AMZN", "TSLA", "HD", "MCD", "NKE",
-                "SBUX", "TGT", "LOW", "TJX", "BKNG"
-            ],
-            "consumer staples": [
-                "WMT", "PG", "KO", "PEP", "COST",
-                "MDLZ", "CL", "KMB", "GIS", "K"
-            ],
-            "industrial": [
-                "BA", "CAT", "GE", "MMM", "HON",
-                "UNP", "UPS", "LMT", "RTX", "DE"
-            ],
-            "materials": [
-                "LIN", "APD", "SHW", "ECL", "DD",
-                "NEM", "FCX", "NUE", "VMC", "MLM"
-            ],
-            "utilities": [
-                "NEE", "DUK", "SO", "D", "AEP",
-                "EXC", "SRE", "XEL", "WEC", "ED"
-            ],
-            "real estate": [
-                "PLD", "AMT", "CCI", "EQIX", "PSA",
-                "SPG", "WELL", "DLR", "O", "VICI"
-            ],
-            "communication services": [
-                "GOOGL", "META", "DIS", "NFLX", "CMCSA",
-                "T", "VZ", "TMUS", "CHTR", "EA"
-            ],
-            "telecom": [
-                "T", "VZ", "TMUS", "CHTR", "CMCSA"
-            ]
-        }
-        
-        tickers = sector_map.get(sector.lower(), [])
-        
-        if not tickers:
-            logger.warning(f"No fallback tickers found for sector: {sector}")
-            # Return a default set of diverse stocks
-            tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
-        
-        return tickers[:limit]
     
     def search_companies_by_query(
         self, 

@@ -145,7 +145,6 @@ class StockAnalysisAgent:
         else:
             trend = "neutral"
         
-        # Mock support and resistance levels
         support = round(stock.price * 0.95, 2)
         resistance = round(stock.price * 1.05, 2)
         
@@ -161,7 +160,6 @@ class StockAnalysisAgent:
         Fetch news for a stock from Yahoo Finance.
         
         Uses yfinance library to get real news articles.
-        Falls back to mock data if yfinance is not available or fails.
         """
         try:
             import yfinance as yf
@@ -171,8 +169,7 @@ class StockAnalysisAgent:
             news_items = ticker.news
             
             if not news_items:
-                logger.warning(f"No news found for {stock.symbol}, using mock data")
-                #return self._get_mock_news(stock)
+                logger.warning(f"No news found for {stock.symbol}")
             
             # Convert Yahoo Finance news to NewsItem objects
             parsed_news = []
@@ -241,10 +238,8 @@ class StockAnalysisAgent:
                     
         except ImportError:
             logger.warning("yfinance not installed. Install with: pip install yfinance")
-            #return self._get_mock_news(stock)
         except Exception as e:
             logger.warning(f"Failed to fetch news for {stock.symbol}: {e}")
-            # return self._get_mock_news(stock)
     
     def _analyze_sentiment(self, text: str) -> str:
         """
@@ -289,7 +284,6 @@ class StockAnalysisAgent:
         - Ex-dividend dates
         - Splits
         
-        Falls back to mock data if yfinance is not available or fails.
         """
         try:
             import yfinance as yf
@@ -371,15 +365,12 @@ class StockAnalysisAgent:
             if events:
                 return events
             else:
-                logger.warning(f"No events found for {stock.symbol}, using mock data")
-                #return self._get_mock_events(stock)
+                logger.warning(f"No events found for {stock.symbol}")
                 
         except ImportError:
             logger.warning("yfinance not installed. Install with: pip install yfinance")
-            #return self._get_mock_events(stock)
         except Exception as e:
             logger.warning(f"Failed to fetch events for {stock.symbol}: {e}")
-            #return self._get_mock_events(stock)
     
     def _generate_recommendation(
         self,

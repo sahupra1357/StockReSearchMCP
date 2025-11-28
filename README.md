@@ -36,7 +36,7 @@ A sophisticated **multi-agent Model Context Protocol (MCP) server** for comprehe
 
 1. **Stock Search Agent** 
    - Semantic search on SEC filings via ChromaDB
-   - Real-time data from Yahoo Finance API
+   - **Live data exclusively from Yahoo Finance API** (no mock data)
    - Finds companies using natural language queries
 
 2. **Stock Categorization Agent**
@@ -46,8 +46,8 @@ A sophisticated **multi-agent Model Context Protocol (MCP) server** for comprehe
 
 3. **Stock Analysis Agent**
    - Price trend analysis (bullish/bearish patterns)
-   - News sentiment analysis
-   - Upcoming events (earnings, dividends)
+   - **Live news exclusively from Yahoo Finance** with AI sentiment analysis
+   - **Live events exclusively from Yahoo Finance** (earnings dates, dividends, ex-dividend dates)
    - AI-powered investment recommendations
 
 ### 📊 Complete Analysis Pipeline
@@ -55,13 +55,13 @@ A sophisticated **multi-agent Model Context Protocol (MCP) server** for comprehe
 When you query any sector/industry:
 
 1. **Semantic Search** → Finds relevant companies from SEC filings database
-2. **Real-Time Fetching** → Gets current prices, changes, market cap from Yahoo Finance
+2. **Live Data Fetching** → Gets current prices, changes, market cap from Yahoo Finance (no mock data)
 3. **Categorization** → Groups stocks by price range
 4. **Deep Analysis** → For each stock:
    - Price trends & momentum
-   - Recent news with sentiment
-   - Upcoming events calendar
-   - Investment recommendation
+   - **Live news exclusively from Yahoo Finance** with AI sentiment analysis
+   - **Live events exclusively from Yahoo Finance** (earnings dates, dividend schedules)
+   - AI-powered investment recommendation
 
 ### 🔍 ChromaDB Integration
 
@@ -618,13 +618,28 @@ python -m stock_research_mcp.server
 stock-research-mcp
 ```
 
-## 🌐 Extending with Real Data Sources
+## 🌐 Data Sources & API Integration
 
-Currently, the server uses mock data for demonstration. To integrate real APIs:
+The system is **fully integrated with real APIs** and provides live market data:
 
-### 1. Stock Data APIs
+### ✅ Currently Integrated
 
-Add real-time stock data integration:
+**1. Yahoo Finance (yfinance)** - Exclusive live data source
+   - ✅ Real-time stock prices, market cap, and price changes
+   - ✅ Live news articles with AI sentiment analysis
+   - ✅ Live earnings dates and dividend schedules
+   - ✅ Ex-dividend dates and company events
+   - ✅ No API key required
+   - ⚠️ **No mock data fallback** - system fails gracefully if data unavailable
+
+**2. ChromaDB with SEC EDGAR**
+   - ✅ 8,000+ company filings indexed
+   - ✅ Semantic search on business descriptions
+   - ✅ Natural language sector queries
+
+### 🔌 Optional Additional APIs
+
+For extended functionality, you can add:
 
 ```python
 # In stock_search_agent.py
@@ -648,45 +663,20 @@ async def _fetch_stocks_from_source(self, sector: str) -> List[Stock]:
 - [Financial Modeling Prep](https://financialmodelingprep.com/) - Comprehensive data
 - [Polygon.io](https://polygon.io/) - Real-time data
 
-### 2. News Integration
+**Additional News Sources:**
+- [News API](https://newsapi.org/) - For broader news coverage
+- [Finnhub](https://finnhub.io/) - For financial news aggregation
+- [Alpha Vantage News](https://www.alphavantage.co/) - For alternative news feeds
 
-Add real news fetching:
+Note: The system already fetches real news from Yahoo Finance via yfinance library.
 
-```python
-# In stock_analysis_agent.py
-from newsapi import NewsApiClient
+**Additional Event Sources:**
+- [Alpha Vantage Events](https://www.alphavantage.co/) - For additional earnings calendars
+- [Finnhub Calendar](https://finnhub.io/) - For IPO and economic calendars
 
-async def _fetch_stock_news(self, stock: Stock) -> List[NewsItem]:
-    newsapi = NewsApiClient(api_key=os.getenv("NEWS_API_KEY"))
-    articles = newsapi.get_everything(
-        q=stock.symbol,
-        language='en',
-        sort_by='publishedAt'
-    )
-    
-    # Convert to NewsItem objects
-    return news_items
-```
+Note: The system already fetches real earnings dates, dividend schedules, and ex-dividend dates from Yahoo Finance.
 
-**Recommended APIs:**
-- [News API](https://newsapi.org/) - General news
-- [Finnhub](https://finnhub.io/) - Financial news
-- [Alpha Vantage News](https://www.alphavantage.co/) - Stock-specific news
-
-### 3. Events & Calendar
-
-Integrate financial calendars:
-
-```python
-# In stock_analysis_agent.py
-async def _fetch_stock_events(self, stock: Stock) -> List[EventItem]:
-    # Fetch from earnings calendar API
-    # Parse dividend schedules
-    # Get product launch dates
-    return events
-```
-
-### 4. Environment Variables
+### Environment Variables
 
 Create a `.env` file:
 
@@ -966,7 +956,7 @@ MIT License
 
 ## ⚠️ Disclaimer
 
-**IMPORTANT**: This tool is for educational and research purposes only. The stock analysis and recommendations are based on mock data and should **NOT** be used for actual investment decisions. 
+**IMPORTANT**: This tool is for educational and research purposes only. While the system uses real market data from Yahoo Finance, investment recommendations are algorithmically generated and should **NOT** be used as the sole basis for actual investment decisions. 
 
 - Always conduct your own research
 - Consult with a qualified financial advisor
@@ -981,11 +971,11 @@ MIT License
 
 ## 💡 Tips
 
-1. **Start with mock data** - Test the system before adding API integrations
-2. **Rate limiting** - Be mindful of API rate limits when using real data
-3. **Caching** - Consider caching API responses to reduce costs
-4. **Error handling** - Add robust error handling for production use
-5. **Logging** - Use logging to debug issues and monitor performance
+1. **Live data only** - The system uses Yahoo Finance exclusively for real-time prices, news, and events (no mock data)
+2. **Rate limiting** - Yahoo Finance through yfinance has built-in rate limiting
+3. **Caching** - Consider caching API responses for frequently queried stocks
+4. **Error handling** - System fails gracefully if Yahoo Finance data is unavailable (no fallback to mock data)
+5. **Logging** - All operations are logged to `logs/` directory for debugging
 
 ---
 

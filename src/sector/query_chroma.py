@@ -185,6 +185,9 @@ def semantic_search(query, n_results=5):
             n_results=n_results
         )
         
+        print(results)
+        print("\n\n")
+        print(results.keys())
         if not results['ids'][0]:
             print("No results found.\n")
             return
@@ -195,14 +198,15 @@ def semantic_search(query, n_results=5):
             doc_id = results['ids'][0][i]
             doc_text = results['documents'][0][i]
             distance = results['distances'][0][i] if results.get('distances') else None
+            print("^^^^^^^^ ",distance)
             metadata = results['metadatas'][0][i] if results['metadatas'] else {}
             
             print(f"Rank {i+1}: {doc_id}")
             if distance is not None:
                 similarity = 1 - distance
                 print(f"Similarity: {similarity:.4f}")
-            print(f"Metadata: {metadata}")
-            print(f"Text preview: {doc_text[:300]}...")
+            print(f"Metadata: {metadata.get('ticker', 'N/A')}, Sector: {metadata.get('sector', 'N/A')}, Industry: {metadata.get('industry', 'N/A')}")
+            # print(f"Text preview: {doc_text[:300]}...")
             print("-" * 80)
         
         print()
@@ -266,7 +270,7 @@ def main():
             print("Usage: python query_chroma.py search <query>")
             return
         query = " ".join(sys.argv[2:])
-        n_results = 5
+        n_results = 2
         semantic_search(query, n_results)
     
     elif command == "tickers":

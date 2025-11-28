@@ -47,6 +47,7 @@ class RealAPIStockFetcher:
         self.polygon_key = os.getenv("POLYGON_API_KEY")
         self.fmp_key = os.getenv("FMP_API_KEY")
         self.nasdaq_key = os.getenv("NASDAQ_DATA_LINK_KEY")
+        self.ticker_fetch_limit = int(os.getenv("TICKER_FETCH_LIMIT", "50"))
         
         # Initialize sector ticker fetcher (will use ChromaDB if available)
         self.use_chroma = os.getenv("USE_CHROMA_SECTORS", "true").lower() == "true"
@@ -330,43 +331,14 @@ class RealAPIStockFetcher:
         Falls back to hardcoded mappings if ChromaDB is not available.
         """
         if self.sector_fetcher:
+            logger.info(f"Fetching tickers for sector '{sector}' using ChromaDB")
             # Use ChromaDB semantic search or fallback
             return self.sector_fetcher.get_tickers_for_sector(
                 sector=sector,
-                limit=15,  # Get top 15 most relevant companies
-                min_relevance=0.4  # Similarity threshold
+                limit=self.ticker_fetch_limit,
+                min_relevance=1.2  # Similarity threshold
             )
-        else:
-            # Legacy hardcoded fallback
-            sector_map = {
-                "technology": [
-                    "AAPL", "MSFT", "GOOGL", "NVDA", "META", 
-                    "AMD", "INTC", "CRM", "ORCL", "ADBE"
-                ],
-                "healthcare": [
-                    "JNJ", "UNH", "PFE", "ABBV", "LLY", 
-                    "TMO", "MRK", "ABT"
-                ],
-                "finance": [
-                    "JPM", "BAC", "V", "MA", "WFC", 
-                    "GS", "MS", "C", "AXP", "BLK"
-                ],
-                "energy": [
-                    "XOM", "CVX", "COP", "SLB", "EOG",
-                    "MPC", "PSX", "VLO"
-                ],
-                "consumer": [
-                    "AMZN", "WMT", "HD", "MCD", "NKE",
-                    "SBUX", "TGT", "COST"
-                ],
-                "industrial": [
-                    "BA", "CAT", "GE", "MMM", "HON",
-                    "UNP", "UPS", "LMT"
-                ]
-            }
             
-            return sector_map.get(sector.lower(), [])
-
 
 # ============================================================
 # Example Usage

@@ -1,41 +1,71 @@
-# Core dependencies
+# # Core dependencies
+# mcp>=1.0.0
+# requests>=2.31.0
+# beautifulsoup4>=4.12.0
+# pydantic>=2.0.0
+# httpx>=0.25.0
+
+# # Real API integrations (install these to use real data)
+# # Uncomment the ones you need:
+
+# # Yahoo Finance - FREE, no API key needed (RECOMMENDED)
+# yfinance>=0.2.0
+
+# # Environment variables support
+# python-dotenv>=1.0.0
+
+# # News APIs (optional)
+# # newsapi-python>=0.2.7
+# # finnhub-python>=2.4.0
+
+# # Development dependencies (optional)
+# # pytest>=7.0.0
+# # black>=23.0.0
+# # mypy>=1.0.0
+# # pytest-asyncio>=0.21.0
+
+# # Additional dependencies for Vector DB and LLM integrations
+# sec-edgar-downloader==4.0.3
+# beautifulsoup4==4.12.2
+# lxml==4.9.3
+# openai
+# chromadb
+# fastapi==0.95.2
+# uvicorn==0.22.0
+# httpx==0.25.0
+# tqdm==4.66.1
+# python-dotenv==1.0.0
+
+# # Gradio web interface
+# gradio>=4.0.0
+
+# openai-agents>=0.1.0
+# google-adk>=0.1.0
+
+
+
+
+
 mcp>=1.0.0
 requests>=2.31.0
 beautifulsoup4>=4.12.0
 pydantic>=2.0.0
 httpx>=0.25.0
-
-# Real API integrations (install these to use real data)
-# Uncomment the ones you need:
-
-# Yahoo Finance - FREE, no API key needed (RECOMMENDED)
 yfinance>=0.2.0
-
-# Environment variables support
 python-dotenv>=1.0.0
-
-# News APIs (optional)
-# newsapi-python>=0.2.7
-# finnhub-python>=2.4.0
-
-# Development dependencies (optional)
-# pytest>=7.0.0
-# black>=23.0.0
-# mypy>=1.0.0
-# pytest-asyncio>=0.21.0
-
-# Additional dependencies for Vector DB and LLM integrations
-sec-edgar-downloader==4.0.3
+tabulate>=0.9.0
+sec-edgar-downloader>=5.0.3
 beautifulsoup4==4.12.2
-lxml==4.9.3
-openai==1.1.0
-chromadb==0.4.0
-fastapi==0.95.2
-uvicorn==0.22.0
-httpx==0.24.1
-tqdm==4.66.1
-python-dotenv==1.0.0
+lxml==6.0.2
+openai>=2.8.0
+chromadb>=1.3.0
+fastapi==0.120.0
+uvicorn==0.38.0
+tqdm>=4.67.1
+python-dotenv>=1.2.1
+openai-agents>=0.6.1
+google-adk>=1.18.0
 
-# Gradio web interface
-gradio>=4.0.0
-
+pytest>=7.0.0
+black>=23.0.0
+mypy>=1.0.0
